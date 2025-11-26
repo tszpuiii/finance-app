@@ -1,0 +1,20 @@
+# OS / 通用
+.DS_Store
+*.log
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+.env
+.env.local
+
+# client
+client/node_modules/
+client/.expo/
+client/web-build/
+client/.env
+
+# server
+server/node_modules/
+server/.env
+
+
