@@ -10,10 +10,10 @@ export async function isBiometricAvailable() {
 	return enrolled;
 }
 
-export async function authenticateWithBiometrics(promptMessage = '請使用生理辨識進行驗證') {
+export async function authenticateWithBiometrics(promptMessage = 'Use biometric authentication to verify') {
 	const result = await LocalAuthentication.authenticateAsync({
 		promptMessage,
-		cancelLabel: '取消',
+		cancelLabel: 'Cancel',
 		disableDeviceFallback: false,
 	});
 	return result.success === true;

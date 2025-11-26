@@ -14,7 +14,7 @@ export default function LoginScreen({ navigation }) {
 	const onLogin = async () => {
 		try {
 			if (!email || !password) {
-				Alert.alert('請輸入帳號與密碼');
+				Alert.alert('Please enter email and password');
 				return;
 			}
 			setLoading(true);
@@ -28,7 +28,7 @@ export default function LoginScreen({ navigation }) {
 			} catch {}
 			navigation.replace('Dashboard');
 		} catch (err) {
-			Alert.alert('登入失敗', '請檢查帳號或密碼');
+			Alert.alert('Login Failed', 'Please check your email or password');
 		} finally {
 			setLoading(false);
 		}
@@ -42,7 +42,7 @@ export default function LoginScreen({ navigation }) {
 			setBiometricReady(available && enabled);
 			// 若已啟用且有 token，啟動快速生物辨識
 			if (available && enabled && token) {
-				const ok = await authenticateWithBiometrics('使用生理辨識快速登入');
+				const ok = await authenticateWithBiometrics('Use biometric authentication to login');
 				if (ok) {
 					navigation.replace('Dashboard');
 				}
@@ -54,7 +54,7 @@ export default function LoginScreen({ navigation }) {
 		try {
 			const token = await AsyncStorage.getItem('authToken');
 			if (!token) {
-				Alert.alert('尚未啟用', '請先用帳密登入一次以啟用快速登入');
+				Alert.alert('Not Enabled', 'Please login with email and password first to enable quick login');
 				return;
 			}
 			const ok = await authenticateWithBiometrics();
@@ -62,13 +62,13 @@ export default function LoginScreen({ navigation }) {
 				navigation.replace('Dashboard');
 			}
 		} catch {
-			Alert.alert('生理辨識失敗');
+			Alert.alert('Biometric Authentication Failed');
 		}
 	};
 
 	return (
 		<View style={styles.container}>
-			<Text style={styles.title}>登入</Text>
+			<Text style={styles.title}>Login</Text>
 			<TextInput
 				style={styles.input}
 				placeholder="Email"
@@ -79,18 +79,18 @@ export default function LoginScreen({ navigation }) {
 			/>
 			<TextInput
 				style={styles.input}
-				placeholder="密碼"
+				placeholder="Password"
 				secureTextEntry
 				value={password}
 				onChangeText={setPassword}
 			/>
-			<Button title={loading ? '登入中...' : '登入'} onPress={onLogin} disabled={loading} />
+			<Button title={loading ? 'Logging in...' : 'Login'} onPress={onLogin} disabled={loading} />
 			<View style={{ height: 12 }} />
 			{biometricReady ? (
-				<Button title="使用生理辨識快速登入" onPress={onBiometricPress} />
+				<Button title="Quick Login with Biometrics" onPress={onBiometricPress} />
 			) : null}
 			<View style={{ height: 12 }} />
-			<Button title="沒有帳號？前往註冊" onPress={() => navigation.navigate('Register')} />
+			<Button title="No account? Register" onPress={() => navigation.navigate('Register')} />
 		</View>
 	);
 }

@@ -23,14 +23,14 @@ if (API_BASE_URL === 'mock') {
 	let mockToken = 'mock-token';
 	let mockUser = { id: 'u1', email: 'demo@example.com' };
 	let mockExpenses = [
-		{ _id: 'e1', userId: 'u1', amount: 120, category: '飲食', date: new Date().toISOString() },
-		{ _id: 'e2', userId: 'u1', amount: 35, category: '交通', date: new Date().toISOString() },
-		{ _id: 'e3', userId: 'u1', amount: 260, category: '購物', date: new Date().toISOString() },
+		{ _id: 'e1', userId: 'u1', amount: 120, category: 'Food', date: new Date().toISOString() },
+		{ _id: 'e2', userId: 'u1', amount: 35, category: 'Transport', date: new Date().toISOString() },
+		{ _id: 'e3', userId: 'u1', amount: 260, category: 'Shopping', date: new Date().toISOString() },
 	];
 	let mockBudgets = [
 		{ _id: 'b1', userId: 'u1', category: 'ALL', limit: 2000, period: 'monthly' },
-		{ _id: 'b2', userId: 'u1', category: '飲食', limit: 800, period: 'monthly' },
-		{ _id: 'b3', userId: 'u1', category: '交通', limit: 300, period: 'monthly' },
+		{ _id: 'b2', userId: 'u1', category: 'Food', limit: 800, period: 'monthly' },
+		{ _id: 'b3', userId: 'u1', category: 'Transport', limit: 300, period: 'monthly' },
 	];
 
 	api.interceptors.request.use(async (config) => {
@@ -69,7 +69,7 @@ if (API_BASE_URL === 'mock') {
 					_id: `e${Date.now()}`,
 					userId: 'u1',
 					amount: Number(body.amount) || 0,
-					category: body.category || '未分類',
+					category: body.category || 'Uncategorized',
 					date: new Date().toISOString(),
 					location: body.location,
 				};

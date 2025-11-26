@@ -20,13 +20,25 @@ if (mongoUri && mongoUri.trim().length > 0) {
 	mongoose
 		.connect(mongoUri)
 		.then(() => {
-			console.log('Connected to MongoDB');
+			console.log('✓ Connected to MongoDB');
 		})
 		.catch((err) => {
-			console.error('MongoDB connection error:', err.message);
+			console.error('✗ MongoDB connection error:', err.message);
+			console.error('  Please check your MONGODB_URI in .env file');
+			// 不阻止服務器啟動，但會在 API 調用時返回 503
 		});
+
+	// 監聽連接事件
+	mongoose.connection.on('error', (err) => {
+		console.error('MongoDB connection error:', err);
+	});
+
+	mongoose.connection.on('disconnected', () => {
+		console.warn('MongoDB disconnected');
+	});
 } else {
-	console.warn('MONGODB_URI not set. Skipping MongoDB connection.');
+	console.warn('⚠ MONGODB_URI not set. Skipping MongoDB connection.');
+	console.warn('  API endpoints will return 503 (Database not available)');
 }
 
 // Routes

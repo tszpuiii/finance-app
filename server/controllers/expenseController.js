@@ -16,13 +16,31 @@ async function createExpense(req, res) {
 		if (amount == null || isNaN(Number(amount)) || !category) {
 			return res.status(400).json({ error: 'Invalid amount or category' });
 		}
+		// Ensure date is set correctly - if not provided, use current date
+		// Store date in UTC to match budget status queries
+		let expenseDate;
+		if (date) {
+			expenseDate = new Date(date);
+		} else {
+			// Use current date, but normalize to UTC start of day
+			const now = new Date();
+			expenseDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
+		}
+		
 		const expense = await Expense.create({
 			userId: req.userId,
 			amount: Number(amount),
 			category,
-			date: date ? new Date(date) : new Date(),
+			date: expenseDate,
 			location: location || undefined,
 			note: note || undefined,
+		});
+		
+		console.log('Created expense:', {
+			id: expense._id,
+			category: expense.category,
+			amount: expense.amount,
+			date: expense.date.toISOString()
 		});
 		// 簡易預算檢查（當月）
 		let alert = null;

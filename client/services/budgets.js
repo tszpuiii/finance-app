@@ -11,7 +11,9 @@ export async function upsertBudget({ category = 'ALL', limit }) {
 }
 
 export async function getBudgetStatus() {
-	const { data } = await api.get('/budgets/status');
+	// Add timestamp to avoid caching
+	const { data } = await api.get(`/budgets/status?_=${Date.now()}`);
+	console.log('getBudgetStatus response:', data);
 	return data.status || [];
 }
 

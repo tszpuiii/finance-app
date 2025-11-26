@@ -12,6 +12,7 @@ client/node_modules/
 client/.expo/
 client/web-build/
 client/.env
+client/android/local.properties
 
 # server
 server/node_modules/

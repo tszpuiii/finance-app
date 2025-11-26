@@ -32,7 +32,7 @@ export default function DashboardScreen({ navigation }) {
 
 	const categoryTotals = Object.values(
 		expenses.reduce((acc, e) => {
-			const key = e.category || '未分類';
+			const key = e.category || 'Uncategorized';
 			if (!acc[key]) acc[key] = { category: key, total: 0 };
 			acc[key].total += Number(e.amount || 0);
 			return acc;
@@ -50,34 +50,34 @@ export default function DashboardScreen({ navigation }) {
 			await deleteExpense(item._id);
 			setExpenses((prev) => prev.filter((x) => x._id !== item._id));
 		} catch {
-			Alert.alert('刪除失敗');
+			Alert.alert('Delete Failed');
 		}
 	}
 
 	return (
 		<View style={styles.container}>
-			<Text style={styles.title}>儀表板</Text>
+			<Text style={styles.title}>Dashboard</Text>
 			<BudgetChart data={categoryTotals} />
 			<View style={{ height: 8 }} />
 			<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-				<Button title="新增支出" onPress={() => navigation.navigate('AddExpense')} />
-				<Button title="預算" onPress={() => navigation.navigate('Budget')} />
-				<Button title="洞察" onPress={() => navigation.navigate('Insights')} />
+				<Button title="Add Expense" onPress={() => navigation.navigate('AddExpense')} />
+				<Button title="Budget" onPress={() => navigation.navigate('Budget')} />
+				<Button title="Insights" onPress={() => navigation.navigate('Insights')} />
 			</View>
 			<View style={{ height: 16 }} />
 			<TextInput
-				placeholder="搜尋（類別/備註）"
+				placeholder="Search (category/note)"
 				value={query}
 				onChangeText={setQuery}
 				style={{ borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 8, marginBottom: 8 }}
 			/>
-			<Text style={styles.subtitle}>最近支出</Text>
+			<Text style={styles.subtitle}>Recent Expenses</Text>
 			<FlatList
 				data={filtered}
 				keyExtractor={(item) => item._id}
 				renderItem={({ item }) => <ExpenseItem expense={item} onDelete={onDelete} />}
 				refreshControl={<RefreshControl refreshing={refreshing} onRefresh={load} />}
-				ListEmptyComponent={<Text style={{ color: '#666' }}>目前沒有支出，先新增一筆吧！</Text>}
+				ListEmptyComponent={<Text style={{ color: '#666' }}>No expenses yet. Add one to get started!</Text>}
 			/>
 		</View>
 	);

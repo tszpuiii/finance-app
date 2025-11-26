@@ -13,7 +13,7 @@
 
 ## 技術堆疊
 - 前端：Expo React Native（Navigation、expo-local-authentication、expo-location、victory-native、expo-notifications）
-- 後端：Node.js + Express + Mongoose（MongoDB Atlas）、JWT、CORS
+- 後端：Node.js + Express + Mongoose（MongoDB 本地/Atlas）、JWT、CORS
 
 ## 專案結構
 ```
@@ -25,18 +25,34 @@ finance-app/
 ## 快速開始
 
 ### 1) 後端（Server）
+
+#### 安裝 MongoDB（本地開發）
+**選項 A: 使用 Docker（推薦）**
+```powershell
+docker run -d -p 27017:27017 --name mongodb mongo
+```
+
+**選項 B: 安裝 MongoDB Community Server**
+- 下載：https://www.mongodb.com/try/download/community
+- 詳細說明請見 `server/MONGODB_SETUP.md`
+
+#### 設置後端
 ```powershell
 cd server
 npm install
-Copy-Item env.example .env   # 建立 .env 並填入實際值
+Copy-Item env.example .env   # 建立 .env（已預設為本地 MongoDB）
 npm run dev
 ```
-.env 需要：
+
+`.env` 已自動配置為：
 ```
 PORT=3000
-MONGODB_URI=你的 Atlas 連線字串
-JWT_SECRET=長隨機字串
+MONGODB_URI=mongodb://localhost:27017/finance-app
+JWT_SECRET=自動生成的隨機字串
 ```
+
+**使用 MongoDB Atlas（雲端）**：編輯 `server/.env`，將 `MONGODB_URI` 改為你的 Atlas 連線字串。
+
 健康檢查：`http://localhost:3000/health` 應回 `{ "status": "ok" }`
 
 ### 2) 前端（Client）
@@ -86,6 +102,7 @@ Mock 模式會在前端攔截 API 並回傳假資料，方便快速驗收 UI 與
 
 ## 參考文件
 - Expo（React Native）`https://docs.expo.dev/`
+- MongoDB 本地安裝：`server/MONGODB_SETUP.md`
 - MongoDB Atlas `https://www.mongodb.com/atlas/database`
 
 ---

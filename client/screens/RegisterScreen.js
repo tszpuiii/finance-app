@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
 import { api } from '../utils/api';
+import { API_BASE_URL } from '../constants/apiUrl';
 
 export default function RegisterScreen({ navigation }) {
 	const [email, setEmail] = useState('');
@@ -10,15 +11,27 @@ export default function RegisterScreen({ navigation }) {
 	const onRegister = async () => {
 		try {
 			if (!email || !password) {
-				Alert.alert('請輸入 email 與密碼');
+				Alert.alert('Please enter email and password');
 				return;
 			}
 			setLoading(true);
 			await api.post('/auth/register', { email, password });
-			Alert.alert('註冊成功', '請使用新帳號登入');
+			Alert.alert('Registration Successful', 'Please login with your new account');
 			navigation.replace('Login');
 		} catch (err) {
-			Alert.alert('註冊失敗', 'Email 可能已存在或伺服器錯誤');
+			console.error('註冊錯誤:', err);
+			console.error('API URL:', API_BASE_URL);
+			
+			let errorMessage = 'Registration Failed';
+			if (err.code === 'ECONNREFUSED' || err.message?.includes('Network Error')) {
+				errorMessage = `Unable to connect to server\n\nPlease confirm:\n1. Backend server is running\n2. API URL is correct: ${API_BASE_URL}\n\nFor Android emulator use:\nhttp://10.0.2.2:3000/api\n\nFor real device use computer IP:\nhttp://192.168.x.x:3000/api`;
+			} else if (err.response?.data?.error) {
+				errorMessage = err.response.data.error;
+			} else if (err.message) {
+				errorMessage = err.message;
+			}
+			
+			Alert.alert('Registration Failed', errorMessage);
 		} finally {
 			setLoading(false);
 		}
@@ -26,7 +39,7 @@ export default function RegisterScreen({ navigation }) {
 
 	return (
 		<View style={styles.container}>
-			<Text style={styles.title}>建立帳號</Text>
+			<Text style={styles.title}>Create Account</Text>
 			<TextInput
 				style={styles.input}
 				placeholder="Email"
@@ -37,12 +50,12 @@ export default function RegisterScreen({ navigation }) {
 			/>
 			<TextInput
 				style={styles.input}
-				placeholder="密碼"
+				placeholder="Password"
 				secureTextEntry
 				value={password}
 				onChangeText={setPassword}
 			/>
-			<Button title={loading ? '註冊中...' : '註冊'} onPress={onRegister} disabled={loading} />
+			<Button title={loading ? 'Registering...' : 'Register'} onPress={onRegister} disabled={loading} />
 		</View>
 	);
 }

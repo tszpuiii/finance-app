@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { getBudgets, upsertBudget, getBudgetStatus } from '../services/budgets';
 
 export default function BudgetScreen() {
@@ -9,31 +10,52 @@ export default function BudgetScreen() {
 	const [status, setStatus] = useState([]);
 	const [loading, setLoading] = useState(false);
 
-	async function load() {
-		const [budgets, s] = await Promise.all([getBudgets(), getBudgetStatus()]);
-		setStatus(s);
-		const map = new Map(budgets.map((b) => [`${b.category}:${b.period}`, b]));
-		setOverall(map.get('ALL:monthly')?.limit?.toString?.() || '');
-		setFood(map.get('飲食:monthly')?.limit?.toString?.() || '');
-		setTransport(map.get('交通:monthly')?.limit?.toString?.() || '');
-	}
-
-	useEffect(() => {
-		load();
+	const load = useCallback(async () => {
+		try {
+			console.log('Loading budget data...');
+			const [budgets, s] = await Promise.all([getBudgets(), getBudgetStatus()]);
+			console.log('Received budgets:', budgets);
+			console.log('Received budget status:', s);
+			console.log('Status array length:', s?.length);
+			if (s && s.length > 0) {
+				console.log('Status items:', s.map(item => `${item.category}: $${item.spent}/${item.limit}`));
+			}
+			setStatus(s || []);
+			const map = new Map(budgets.map((b) => [`${b.category}:${b.period}`, b]));
+			setOverall(map.get('ALL:monthly')?.limit?.toString?.() || '');
+			setFood(map.get('Food:monthly')?.limit?.toString?.() || '');
+			setTransport(map.get('Transport:monthly')?.limit?.toString?.() || '');
+			console.log('Budget status updated in state');
+		} catch (err) {
+			console.error('Failed to load budget data:', err);
+			console.error('Error details:', err.response?.data || err.message);
+			Alert.alert('Load Failed', err.message || 'Failed to load budget data');
+		}
 	}, []);
+
+	// 當頁面獲得焦點時自動刷新
+	useFocusEffect(
+		useCallback(() => {
+			console.log('BudgetScreen 獲得焦點，刷新數據');
+			load();
+		}, [load])
+	);
 
 	async function save() {
 		try {
 			setLoading(true);
 			const ops = [];
 			if (overall) ops.push(upsertBudget({ category: 'ALL', limit: Number(overall) }));
-			if (food) ops.push(upsertBudget({ category: '飲食', limit: Number(food) }));
-			if (transport) ops.push(upsertBudget({ category: '交通', limit: Number(transport) }));
+			if (food) ops.push(upsertBudget({ category: 'Food', limit: Number(food) }));
+			if (transport) ops.push(upsertBudget({ category: 'Transport', limit: Number(transport) }));
 			await Promise.all(ops);
-			Alert.alert('已儲存預算');
+			console.log('Budget saved, refreshing status...');
+			// Force refresh status after saving
 			await load();
-		} catch {
-			Alert.alert('儲存失敗');
+			Alert.alert('Budget Saved');
+		} catch (err) {
+			console.error('Save budget error:', err);
+			Alert.alert('Save Failed', err.message || 'Please try again');
 		} finally {
 			setLoading(false);
 		}
@@ -41,18 +63,24 @@ export default function BudgetScreen() {
 
 	return (
 		<View style={styles.container}>
-			<Text style={styles.title}>預算設定（月）</Text>
-			<TextInput style={styles.input} placeholder="總預算（ALL）" keyboardType="numeric" value={overall} onChangeText={setOverall} />
-			<TextInput style={styles.input} placeholder="飲食預算" keyboardType="numeric" value={food} onChangeText={setFood} />
-			<TextInput style={styles.input} placeholder="交通預算" keyboardType="numeric" value={transport} onChangeText={setTransport} />
-			<Button title={loading ? '儲存中...' : '儲存'} onPress={save} disabled={loading} />
+			<Text style={styles.title}>Budget Settings (Monthly)</Text>
+			<TextInput style={styles.input} placeholder="Total Budget (ALL)" keyboardType="numeric" value={overall} onChangeText={setOverall} />
+			<TextInput style={styles.input} placeholder="Food Budget" keyboardType="numeric" value={food} onChangeText={setFood} />
+			<TextInput style={styles.input} placeholder="Transport Budget" keyboardType="numeric" value={transport} onChangeText={setTransport} />
+			<Button title={loading ? 'Saving...' : 'Save'} onPress={save} disabled={loading} />
 			<View style={{ height: 16 }} />
-			<Text style={styles.title}>預算狀態</Text>
-			{status.map((s) => (
-				<Text key={s.category} style={styles.status}>
-					{`${s.category}: $${s.spent.toFixed(0)} / $${s.limit.toFixed(0)} (${Math.round(s.ratio * 100)}%)`}
-				</Text>
-			))}
+			<Text style={styles.title}>Budget Status</Text>
+			{(() => {
+				const allBudget = status.find((s) => s.category === 'ALL');
+				if (!allBudget) {
+					return <Text style={styles.status}>No Total Budget (ALL) set. Please set a Total Budget above.</Text>;
+				}
+				return (
+					<Text style={styles.status}>
+						{`Total Budget: $${allBudget.spent.toFixed(0)} / $${allBudget.limit.toFixed(0)} (${Math.round(allBudget.ratio * 100)}%)`}
+					</Text>
+				);
+			})()}
 		</View>
 	);
 }

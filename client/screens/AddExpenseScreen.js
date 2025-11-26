@@ -14,17 +14,17 @@ export default function AddExpenseScreen({ navigation }) {
 
 	function inferCategoryFromPlace(text) {
 		const t = (text || '').toLowerCase();
-		if (t.includes('starbucks') || t.includes('cafe') || t.includes('coffee') || t.includes('餐') || t.includes('飲')) {
-			return '飲食';
+		if (t.includes('starbucks') || t.includes('cafe') || t.includes('coffee') || t.includes('restaurant') || t.includes('food')) {
+			return 'Food';
 		}
-		if (t.includes('7-eleven') || t.includes('便利') || t.includes('store')) {
-			return '購物';
+		if (t.includes('7-eleven') || t.includes('convenience') || t.includes('store') || t.includes('shop')) {
+			return 'Shopping';
 		}
-		if (t.includes('station') || t.includes('mtr') || t.includes('bus') || t.includes('地鐵') || t.includes('車站')) {
-			return '交通';
+		if (t.includes('station') || t.includes('mtr') || t.includes('bus') || t.includes('metro') || t.includes('train')) {
+			return 'Transport';
 		}
-		if (t.includes('market') || t.includes('mall') || t.includes('plaza') || t.includes('超市')) {
-			return '購物';
+		if (t.includes('market') || t.includes('mall') || t.includes('plaza') || t.includes('supermarket')) {
+			return 'Shopping';
 		}
 		return '';
 	}
@@ -56,7 +56,7 @@ export default function AddExpenseScreen({ navigation }) {
 	const onSave = async () => {
 		try {
 			if (!amount || !category) {
-				Alert.alert('請填寫金額與類別');
+				Alert.alert('Please enter amount and category');
 				return;
 			}
 			setLoading(true);
@@ -69,18 +69,18 @@ export default function AddExpenseScreen({ navigation }) {
 				const { data } = await api.post('/expenses', payload);
 				if (data?.alert) {
 					const a = data.alert;
-					const title = a.type === 'budget_exceeded' ? '預算已超過' : '預算警告';
-					const body = `${a.category} 已達 ${a.percent}%（$${a.spent} / $${a.limit}）`;
+					const title = a.type === 'budget_exceeded' ? 'Budget Exceeded' : 'Budget Warning';
+					const body = `${a.category} reached ${a.percent}% ($${a.spent} / $${a.limit})`;
 					notify(title, body);
 				}
-				Alert.alert('已儲存');
+				Alert.alert('Saved');
 			} catch {
 				await queueExpense(payload);
-				Alert.alert('離線儲存', '已加入待同步佇列');
+				Alert.alert('Offline Saved', 'Added to sync queue');
 			}
 			navigation.goBack();
 		} catch (err) {
-			Alert.alert('儲存失敗', '請確認登入狀態或伺服器連線');
+			Alert.alert('Save Failed', 'Please check login status or server connection');
 		} finally {
 			setLoading(false);
 		}
@@ -88,22 +88,22 @@ export default function AddExpenseScreen({ navigation }) {
 
 	return (
 		<View style={styles.container}>
-			<Text style={styles.title}>新增支出</Text>
+			<Text style={styles.title}>Add Expense</Text>
 			<TextInput
 				style={styles.input}
-				placeholder="金額 (如 120)"
+				placeholder="Amount (e.g. 120)"
 				keyboardType="numeric"
 				value={amount}
 				onChangeText={setAmount}
 			/>
 			<TextInput
 				style={styles.input}
-				placeholder="類別 (如 食物)"
+				placeholder="Category (e.g. Food)"
 				value={category}
 				onChangeText={setCategory}
 			/>
-			{placeName ? <Text style={styles.hint}>偵測地點：{placeName}</Text> : null}
-			<Button title={loading ? '儲存中...' : '儲存'} onPress={onSave} disabled={loading} />
+			{placeName ? <Text style={styles.hint}>Detected location: {placeName}</Text> : null}
+			<Button title={loading ? 'Saving...' : 'Save'} onPress={onSave} disabled={loading} />
 		</View>
 	);
 }

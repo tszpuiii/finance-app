@@ -9,7 +9,7 @@ export default function ExpenseItem({ expense, onDelete }) {
 			</View>
 			<View style={{ alignItems: 'flex-end' }}>
 				<Text style={styles.amount}>${expense.amount.toFixed(2)}</Text>
-				{onDelete ? <Button title="刪除" onPress={() => onDelete(expense)} /> : null}
+				{onDelete ? <Button title="Delete" onPress={() => onDelete(expense)} /> : null}
 			</View>
 		</View>
 	);
