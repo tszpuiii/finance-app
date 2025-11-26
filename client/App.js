@@ -9,6 +9,7 @@ import DashboardScreen from './screens/DashboardScreen';
 import AddExpenseScreen from './screens/AddExpenseScreen';
 import BudgetScreen from './screens/BudgetScreen';
 import InsightsScreen from './screens/InsightsScreen';
+import CurrencySettingsScreen from './screens/CurrencySettingsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -23,6 +24,7 @@ export default function App() {
 				<Stack.Screen name="AddExpense" component={AddExpenseScreen} options={{ title: 'Add Expense' }} />
 				<Stack.Screen name="Budget" component={BudgetScreen} options={{ title: 'Budget' }} />
 				<Stack.Screen name="Insights" component={InsightsScreen} options={{ title: 'Insights' }} />
+				<Stack.Screen name="CurrencySettings" component={CurrencySettingsScreen} options={{ title: 'Currency Settings' }} />
 			</Stack.Navigator>
 		</NavigationContainer>
 	);

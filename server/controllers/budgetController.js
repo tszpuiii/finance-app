@@ -136,6 +136,84 @@ async function getBudgetStatus(req, res) {
 	}
 }
 
-module.exports = { upsertBudget, getBudgets, getBudgetStatus };
+async function deleteBudget(req, res) {
+	try {
+		const { category } = req.body;
+		if (!category) {
+			return res.status(400).json({ error: 'Category required' });
+		}
+		// Don't allow deleting ALL category
+		if (category === 'ALL') {
+			return res.status(400).json({ error: 'Cannot delete ALL category' });
+		}
+		// Convert userId to ObjectId if it's a string
+		const userId = mongoose.Types.ObjectId.isValid(req.userId) 
+			? new mongoose.Types.ObjectId(req.userId) 
+			: req.userId;
+		const doc = await Budget.findOneAndDelete({ userId: userId, category, period: 'monthly' });
+		if (!doc) {
+			return res.status(404).json({ error: 'Budget not found' });
+		}
+		return res.json({ ok: true });
+	} catch (err) {
+		return res.status(500).json({ error: 'Server error' });
+	}
+}
+
+async function convertAllBudgets(req, res) {
+	try {
+		const { fromCurrency, toCurrency, exchangeRate } = req.body;
+		
+		if (!fromCurrency || !toCurrency || !exchangeRate) {
+			return res.status(400).json({ error: 'Missing required parameters: fromCurrency, toCurrency, exchangeRate' });
+		}
+		
+		if (fromCurrency === toCurrency) {
+			return res.json({ message: 'Same currency, no conversion needed', updated: 0 });
+		}
+		
+		const rate = parseFloat(exchangeRate);
+		if (isNaN(rate) || rate <= 0) {
+			return res.status(400).json({ error: 'Invalid exchange rate' });
+		}
+		
+		// Convert userId to ObjectId if needed
+		const userId = mongoose.Types.ObjectId.isValid(req.userId) 
+			? new mongoose.Types.ObjectId(req.userId) 
+			: req.userId;
+		
+		// Get all budgets for this user
+		const budgets = await Budget.find({ userId: userId });
+		
+		if (budgets.length === 0) {
+			return res.json({ message: 'No budgets to convert', updated: 0 });
+		}
+		
+		// Update all budgets with converted limits
+		const bulkOps = budgets.map(budget => ({
+			updateOne: {
+				filter: { _id: budget._id },
+				update: { $set: { limit: parseFloat((budget.limit * rate).toFixed(2)) } }
+			}
+		}));
+		
+		const result = await Budget.bulkWrite(bulkOps);
+		
+		console.log(`Converted ${result.modifiedCount} budgets from ${fromCurrency} to ${toCurrency} at rate ${rate}`);
+		
+		return res.json({
+			message: 'Budgets converted successfully',
+			updated: result.modifiedCount,
+			fromCurrency,
+			toCurrency,
+			exchangeRate: rate
+		});
+	} catch (err) {
+		console.error('Convert budgets error:', err);
+		return res.status(500).json({ error: 'Server error', details: err.message });
+	}
+}
+
+module.exports = { upsertBudget, getBudgets, getBudgetStatus, deleteBudget, convertAllBudgets };
 
 

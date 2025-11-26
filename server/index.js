@@ -46,10 +46,12 @@ const authRoutes = require('./routes/auth');
 const expenseRoutes = require('./routes/expenses');
 const budgetRoutes = require('./routes/budgets');
 const forecastRoutes = require('./routes/forecast');
+const currencyRoutes = require('./routes/currency');
 app.use('/api/auth', authRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use('/api/budgets', budgetRoutes);
 app.use('/api/forecast', forecastRoutes);
+app.use('/api/currency', currencyRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

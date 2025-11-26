@@ -1,10 +1,11 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { View, Text, Button, StyleSheet, FlatList, RefreshControl, TextInput, Alert } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { fetchExpenses, deleteExpense } from '../services/expenses';
 import { syncPendingExpenses } from '../utils/sync';
 import ExpenseItem from '../components/ExpenseItem';
 import BudgetChart from '../components/BudgetChart';
+import { getCurrency } from '../utils/currencySettings';
 
 export default function DashboardScreen({ navigation }) {
 	const [expenses, setExpenses] = useState([]);
@@ -59,10 +60,11 @@ export default function DashboardScreen({ navigation }) {
 			<Text style={styles.title}>Dashboard</Text>
 			<BudgetChart data={categoryTotals} />
 			<View style={{ height: 8 }} />
-			<View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+			<View style={{ flexDirection: 'row', justifyContent: 'space-between', flexWrap: 'wrap' }}>
 				<Button title="Add Expense" onPress={() => navigation.navigate('AddExpense')} />
 				<Button title="Budget" onPress={() => navigation.navigate('Budget')} />
 				<Button title="Insights" onPress={() => navigation.navigate('Insights')} />
+				<Button title="Currency" onPress={() => navigation.navigate('CurrencySettings')} />
 			</View>
 			<View style={{ height: 16 }} />
 			<TextInput

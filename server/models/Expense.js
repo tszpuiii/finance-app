@@ -10,6 +10,7 @@ const expenseSchema = new mongoose.Schema(
 			lat: { type: Number },
 			lng: { type: Number },
 		},
+		locationName: { type: String }, // Store location name/address
 		note: { type: String },
 	},
 	{ timestamps: true }

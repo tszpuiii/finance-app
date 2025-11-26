@@ -1,9 +1,9 @@
-import { useCallback, useState, useRef } from 'react';
+import { useCallback, useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, RefreshControl } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { getForecast } from '../services/forecast';
 import { fetchExpenses } from '../services/expenses';
 import { getBudgetStatus } from '../services/budgets';
+import { getCurrency, formatCurrencySync } from '../utils/currencySettings';
 
 // 動態導入 Victory 組件
 let VictoryChart, VictoryLine, VictoryTheme;
@@ -17,27 +17,34 @@ try {
 }
 
 export default function InsightsScreen() {
-	const [forecast, setForecast] = useState(null);
 	const [series, setSeries] = useState([]);
 	const [categoryStats, setCategoryStats] = useState([]);
 	const [budgetStatus, setBudgetStatus] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [refreshing, setRefreshing] = useState(false);
+	const [currency, setCurrency] = useState('USD');
 	const isFirstLoad = useRef(true);
 
-	const loadData = useCallback(async (showLoading = false) => {
+	useEffect(() => {
+		loadCurrency();
+	}, []);
+
+	async function loadCurrency() {
+		const curr = await getCurrency();
+		setCurrency(curr);
+	}
+
+		const loadData = useCallback(async (showLoading = false) => {
 		if (showLoading) {
 			setLoading(true);
 		}
 		setRefreshing(true);
 		try {
-			const [f, expenses, budgets] = await Promise.all([
-				getForecast().catch(() => null),
+			const [expenses, budgets] = await Promise.all([
 				fetchExpenses().catch(() => []),
 				getBudgetStatus().catch(() => [])
 			]);
 			
-			setForecast(f);
 			setBudgetStatus(budgets);
 
 			// 依日期聚合，做簡單趨勢線
@@ -101,46 +108,30 @@ export default function InsightsScreen() {
 			style={styles.container}
 			refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
 		>
-			<Text style={styles.title}>Insights & Forecast</Text>
+			<Text style={styles.title}>Insights</Text>
 
-			{/* Forecast Card */}
-			{forecast && (
-				<View style={styles.card}>
-					<Text style={styles.cardTitle}>Monthly Forecast</Text>
-					<View style={styles.statRow}>
-						<View style={styles.statItem}>
-							<Text style={styles.statLabel}>Spent</Text>
-							<Text style={styles.statValue}>${forecast.spent.toFixed(0)}</Text>
-						</View>
-						<View style={styles.statItem}>
-							<Text style={styles.statLabel}>Avg Daily</Text>
-							<Text style={styles.statValue}>${forecast.avgPerDay.toFixed(0)}</Text>
-						</View>
-						<View style={styles.statItem}>
-							<Text style={styles.statLabel}>Forecast</Text>
-							<Text style={[styles.statValue, styles.forecastValue]}>
-								${forecast.forecast.toFixed(0)}
-							</Text>
-						</View>
-					</View>
-				</View>
-			)}
-
-			{/* Budget Status - Only show ALL category */}
-			{budgetStatus.filter((b) => b.category === 'ALL').length > 0 && (
+			{/* Budget Status - Show all categories except old Chinese ones */}
+			{budgetStatus.filter((b) => {
+				const oldCategories = ['交通', '飲食'];
+				return !oldCategories.includes(b.category);
+			}).length > 0 && (
 				<View style={styles.card}>
 					<Text style={styles.cardTitle}>Budget Status</Text>
 					{budgetStatus
-						.filter((budget) => budget.category === 'ALL')
+						.filter((budget) => {
+							const oldCategories = ['交通', '飲食'];
+							return !oldCategories.includes(budget.category);
+						})
 						.map((budget) => {
 							const ratio = budget.limit > 0 ? budget.spent / budget.limit : 0;
 							const percent = Math.min(100, Math.round(ratio * 100));
+							const categoryName = budget.category === 'ALL' ? 'Total Budget' : budget.category;
 							return (
 								<View key={budget.category} style={styles.budgetItem}>
 									<View style={styles.budgetHeader}>
-										<Text style={styles.budgetCategory}>Total Budget</Text>
+										<Text style={styles.budgetCategory}>{categoryName}</Text>
 										<Text style={styles.budgetAmount}>
-											${budget.spent.toFixed(0)} / ${budget.limit.toFixed(0)}
+											{formatCurrencySync(budget.spent, currency)} / {formatCurrencySync(budget.limit, currency)}
 										</Text>
 									</View>
 									<View style={styles.progressBar}>
@@ -191,7 +182,7 @@ export default function InsightsScreen() {
 							<Text style={styles.dataDate}>
 								{point.x.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
 							</Text>
-							<Text style={styles.dataValue}>${point.y.toFixed(0)}</Text>
+							<Text style={styles.dataValue}>{formatCurrencySync(point.y, currency)}</Text>
 						</View>
 					))}
 				</View>
@@ -208,14 +199,14 @@ export default function InsightsScreen() {
 							</View>
 							<View style={styles.categoryInfo}>
 								<Text style={styles.categoryName}>{stat.category}</Text>
-								<Text style={styles.categoryAmount}>${stat.total.toFixed(0)}</Text>
+								<Text style={styles.categoryAmount}>{formatCurrencySync(stat.total, currency)}</Text>
 							</View>
 						</View>
 					))}
 				</View>
 			)}
 
-			{!forecast && series.length === 0 && categoryStats.length === 0 && (
+			{series.length === 0 && categoryStats.length === 0 && budgetStatus.length === 0 && (
 				<View style={styles.emptyContainer}>
 					<Text style={styles.emptyText}>No Data</Text>
 					<Text style={styles.emptySubtext}>Start recording expenses to see insights here</Text>
@@ -262,26 +253,6 @@ const styles = StyleSheet.create({
 		fontWeight: 'bold',
 		marginBottom: 12,
 		color: '#000'
-	},
-	statRow: {
-		flexDirection: 'row',
-		justifyContent: 'space-around'
-	},
-	statItem: {
-		alignItems: 'center'
-	},
-	statLabel: {
-		fontSize: 12,
-		color: '#666',
-		marginBottom: 4
-	},
-	statValue: {
-		fontSize: 20,
-		fontWeight: 'bold',
-		color: '#000'
-	},
-	forecastValue: {
-		color: '#007AFF'
 	},
 	budgetItem: {
 		marginBottom: 12

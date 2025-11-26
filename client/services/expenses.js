@@ -15,4 +15,13 @@ export async function deleteExpense(id) {
 	return data;
 }
 
+export async function convertAllExpenses(fromCurrency, toCurrency, exchangeRate) {
+	const { data } = await api.post('/expenses/convert', {
+		fromCurrency,
+		toCurrency,
+		exchangeRate
+	});
+	return data;
+}
+
 

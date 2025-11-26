@@ -12,7 +12,7 @@ async function listExpenses(req, res) {
 
 async function createExpense(req, res) {
 	try {
-		const { amount, category, date, location, note } = req.body;
+		const { amount, category, date, location, locationName, note } = req.body;
 		if (amount == null || isNaN(Number(amount)) || !category) {
 			return res.status(400).json({ error: 'Invalid amount or category' });
 		}
@@ -33,6 +33,7 @@ async function createExpense(req, res) {
 			category,
 			date: expenseDate,
 			location: location || undefined,
+			locationName: locationName || undefined,
 			note: note || undefined,
 		});
 		
@@ -85,6 +86,61 @@ async function deleteExpense(req, res) {
 	}
 }
 
-module.exports = { listExpenses, createExpense, deleteExpense };
+async function convertAllExpenses(req, res) {
+	try {
+		const { fromCurrency, toCurrency, exchangeRate } = req.body;
+		
+		if (!fromCurrency || !toCurrency || !exchangeRate) {
+			return res.status(400).json({ error: 'Missing required parameters: fromCurrency, toCurrency, exchangeRate' });
+		}
+		
+		if (fromCurrency === toCurrency) {
+			return res.json({ message: 'Same currency, no conversion needed', updated: 0 });
+		}
+		
+		const rate = parseFloat(exchangeRate);
+		if (isNaN(rate) || rate <= 0) {
+			return res.status(400).json({ error: 'Invalid exchange rate' });
+		}
+		
+		// Convert userId to ObjectId if needed
+		const mongoose = require('mongoose');
+		const userId = mongoose.Types.ObjectId.isValid(req.userId) 
+			? new mongoose.Types.ObjectId(req.userId) 
+			: req.userId;
+		
+		// Get all expenses for this user
+		const expenses = await Expense.find({ userId: userId });
+		
+		if (expenses.length === 0) {
+			return res.json({ message: 'No expenses to convert', updated: 0 });
+		}
+		
+		// Update all expenses with converted amounts
+		const bulkOps = expenses.map(expense => ({
+			updateOne: {
+				filter: { _id: expense._id },
+				update: { $set: { amount: parseFloat((expense.amount * rate).toFixed(2)) } }
+			}
+		}));
+		
+		const result = await Expense.bulkWrite(bulkOps);
+		
+		console.log(`Converted ${result.modifiedCount} expenses from ${fromCurrency} to ${toCurrency} at rate ${rate}`);
+		
+		return res.json({
+			message: 'Expenses converted successfully',
+			updated: result.modifiedCount,
+			fromCurrency,
+			toCurrency,
+			exchangeRate: rate
+		});
+	} catch (err) {
+		console.error('Convert expenses error:', err);
+		return res.status(500).json({ error: 'Server error', details: err.message });
+	}
+}
+
+module.exports = { listExpenses, createExpense, deleteExpense, convertAllExpenses };
 
 

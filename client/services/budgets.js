@@ -17,4 +17,21 @@ export async function getBudgetStatus() {
 	return data.status || [];
 }
 
+export async function deleteBudget(category) {
+	// Axios delete with body needs to use config.data
+	const { data } = await api.delete('/budgets', {
+		data: { category }
+	});
+	return data;
+}
+
+export async function convertAllBudgets(fromCurrency, toCurrency, exchangeRate) {
+	const { data } = await api.post('/budgets/convert', {
+		fromCurrency,
+		toCurrency,
+		exchangeRate
+	});
+	return data;
+}
+
 
