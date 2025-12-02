@@ -2,12 +2,19 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
+const bodyParser = require('body-parser');
 
 dotenv.config();
 
 const app = express();
+
+// 必須在 cors 之前設置 body parser，以確保正確處理大請求
+// 增加 JSON 請求體大小限制以支持大圖片（50MB）
+// 使用 body-parser 以確保兼容性
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '50mb', parameterLimit: 50000 }));
+
 app.use(cors());
-app.use(express.json());
 
 // Health check
 app.get('/health', (_req, res) => {

@@ -10,6 +10,12 @@ export async function createExpense(payload) {
 	return data;
 }
 
+export async function updateExpense(id, payload) {
+	// 如果包含圖片，使用 FormData 或直接發送 base64
+	const { data } = await api.put(`/expenses/${id}`, payload);
+	return data;
+}
+
 export async function deleteExpense(id) {
 	const { data } = await api.delete(`/expenses/${id}`);
 	return data;

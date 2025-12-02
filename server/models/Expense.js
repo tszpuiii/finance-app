@@ -12,6 +12,7 @@ const expenseSchema = new mongoose.Schema(
 		},
 		locationName: { type: String }, // Store location name/address
 		note: { type: String },
+		receiptImage: { type: String }, // Base64 encoded image or URL
 	},
 	{ timestamps: true }
 );

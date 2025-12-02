@@ -1,54 +1,176 @@
-import { View, Text } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { getCurrency, formatCurrencySync } from '../utils/currencySettings';
+import { useState, useEffect } from 'react';
+import { useTheme } from '../contexts/ThemeContext';
 
-// 動態導入 VictoryPie，如果不可用則使用降級方案
-let VictoryPie = null;
+// 動態導入 Victory 組件
+let VictoryChart, VictoryPie;
 try {
 	const victoryNative = require('victory-native');
-	if (victoryNative && typeof victoryNative.VictoryPie !== 'undefined') {
-		VictoryPie = victoryNative.VictoryPie;
-	}
+	VictoryChart = victoryNative?.VictoryChart;
+	VictoryPie = victoryNative?.VictoryPie;
 } catch (err) {
-	// VictoryPie 不可用，將使用降級方案
-	console.warn('VictoryPie not available, using fallback UI');
+	console.warn('Victory components not available, using fallback UI');
 }
 
+// 顏色調色板
+const COLORS = ['#007AFF', '#34C759', '#FF9500', '#FF3B30', '#AF52DE', '#FF2D55', '#5AC8FA', '#FFCC00'];
+
 export default function BudgetChart({ data }) {
+	const { theme, isDarkMode } = useTheme();
+	const [currency, setCurrency] = useState('USD');
+
+	useEffect(() => {
+		loadCurrency();
+	}, []);
+
+	async function loadCurrency() {
+		const curr = await getCurrency();
+		setCurrency(curr);
+	}
+
+	const styles = getStyles(theme, isDarkMode);
+
 	if (!data || data.length === 0) {
 		return (
-			<View style={{ alignItems: 'center', padding: 20 }}>
-				<Text style={{ color: '#666' }}>No expense data</Text>
+			<View style={styles.emptyContainer}>
+				<Text style={styles.emptyText}>No expense data</Text>
 			</View>
 		);
 	}
 
-	// 如果 VictoryPie 不可用，使用降級方案
-	if (!VictoryPie) {
+	// 獲取類別顏色
+	function getCategoryColor(index) {
+		return COLORS[index % COLORS.length];
+	}
+
+	// 如果 VictoryPie 和 VictoryChart 可用，顯示餅圖
+	if (VictoryPie && VictoryChart) {
 		return (
-			<View style={{ padding: 16 }}>
-				<Text style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 12 }}>Expense Categories</Text>
-				{data.map((item, index) => (
-					<View key={index} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#eee' }}>
-						<Text style={{ fontSize: 14 }}>{item.category}</Text>
-						<Text style={{ fontWeight: 'bold', fontSize: 14 }}>${item.total.toFixed(0)}</Text>
-					</View>
-				))}
+			<View style={styles.chartContainer}>
+				<VictoryChart width={320} height={260}>
+					<VictoryPie
+						data={data.map((item, index) => ({
+							x: item.category,
+							y: item.total,
+							fill: getCategoryColor(index)
+						}))}
+						innerRadius={60}
+						labelRadius={({ innerRadius }) => innerRadius + 40}
+						labels={({ datum }) => `${datum.x}\n${formatCurrencySync(datum.y, currency)}`}
+						style={{
+							labels: { fontSize: 10, fill: theme.text, fontWeight: '500' }
+						}}
+					/>
+				</VictoryChart>
+				{/* 圖例 */}
+				<View style={styles.legendContainer}>
+					{data.slice(0, 6).map((item, index) => (
+						<View key={index} style={styles.legendItem}>
+							<View style={[styles.legendColor, { backgroundColor: getCategoryColor(index) }]} />
+							<Text style={styles.legendText} numberOfLines={1}>
+								{item.category}
+							</Text>
+							<Text style={styles.legendAmount}>
+								{formatCurrencySync(item.total, currency)}
+							</Text>
+						</View>
+					))}
+				</View>
 			</View>
 		);
 	}
 
+	// 降級方案：顯示列表
 	return (
-		<View style={{ alignItems: 'center' }}>
-			<VictoryPie
-				width={320}
-				height={260}
-				innerRadius={60}
-				colorScale="qualitative"
-				data={data.map((d) => ({ x: d.category, y: d.total }))}
-				labels={({ datum }) => `${datum.x}\n$${datum.y.toFixed(0)}`}
-				style={{ labels: { fontSize: 12 } }}
-			/>
+		<View style={styles.fallbackContainer}>
+			{data.map((item, index) => (
+				<View key={index} style={styles.fallbackItem}>
+					<View style={styles.fallbackLeft}>
+						<View style={[styles.fallbackColor, { backgroundColor: getCategoryColor(index) }]} />
+						<Text style={styles.fallbackCategory}>{item.category}</Text>
+					</View>
+					<Text style={styles.fallbackAmount}>{formatCurrencySync(item.total, currency)}</Text>
+				</View>
+			))}
 		</View>
 	);
+}
+
+function getStyles(theme, isDarkMode) {
+	return StyleSheet.create({
+		emptyContainer: {
+			alignItems: 'center',
+			padding: 20,
+		},
+		emptyText: {
+			color: theme.textSecondary,
+			fontSize: 14,
+		},
+		chartContainer: {
+			alignItems: 'center',
+			paddingVertical: 10,
+		},
+		legendContainer: {
+			marginTop: 16,
+			width: '100%',
+			paddingHorizontal: 20,
+		},
+		legendItem: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			marginBottom: 12,
+		},
+		legendColor: {
+			width: 12,
+			height: 12,
+			borderRadius: 6,
+			marginRight: 8,
+		},
+		legendText: {
+			flex: 1,
+			fontSize: 13,
+			color: theme.text,
+			fontWeight: '500',
+		},
+		legendAmount: {
+			fontSize: 13,
+			fontWeight: '600',
+			color: theme.text,
+		},
+		fallbackContainer: {
+			padding: 16,
+		},
+		fallbackItem: {
+			flexDirection: 'row',
+			justifyContent: 'space-between',
+			alignItems: 'center',
+			paddingVertical: 12,
+			borderBottomWidth: 1,
+			borderBottomColor: theme.border,
+		},
+		fallbackLeft: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			flex: 1,
+		},
+		fallbackColor: {
+			width: 12,
+			height: 12,
+			borderRadius: 6,
+			marginRight: 10,
+		},
+		fallbackCategory: {
+			fontSize: 14,
+			color: theme.text,
+			fontWeight: '500',
+		},
+		fallbackAmount: {
+			fontSize: 14,
+			fontWeight: 'bold',
+			color: theme.text,
+		},
+	});
 }
 
 

@@ -43,8 +43,16 @@ export function formatCurrency(amount, currencyCode = null) {
 }
 
 // Format amount synchronously (requires currency code)
-export function formatCurrencySync(amount, currencyCode) {
+export function formatCurrencySync(amount, currencyCode, short = false) {
 	const symbol = getCurrencySymbol(currencyCode || 'USD');
-	return `${symbol}${parseFloat(amount || 0).toFixed(2)}`;
+	const value = parseFloat(amount || 0);
+	if (short) {
+		// 簡短格式：$1.2k, $500, etc.
+		if (value >= 1000) {
+			return `${symbol}${(value / 1000).toFixed(1)}k`;
+		}
+		return `${symbol}${value.toFixed(0)}`;
+	}
+	return `${symbol}${value.toFixed(2)}`;
 }
 

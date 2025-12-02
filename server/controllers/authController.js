@@ -95,6 +95,24 @@ async function login(req, res) {
 	}
 }
 
-module.exports = { register, login };
+async function getMe(req, res) {
+	try {
+		const user = await User.findById(req.userId).select('email createdAt');
+		if (!user) {
+			return res.status(404).json({ error: 'User not found' });
+		}
+		return res.json({ 
+			id: user._id, 
+			_id: user._id,
+			email: user.email,
+			createdAt: user.createdAt 
+		});
+	} catch (err) {
+		console.error('Get user error:', err);
+		return res.status(500).json({ error: 'Server error' });
+	}
+}
+
+module.exports = { register, login, getMe };
 
 

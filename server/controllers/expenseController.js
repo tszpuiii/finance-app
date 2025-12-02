@@ -12,7 +12,7 @@ async function listExpenses(req, res) {
 
 async function createExpense(req, res) {
 	try {
-		const { amount, category, date, location, locationName, note } = req.body;
+		const { amount, category, date, location, locationName, note, receiptImage } = req.body;
 		if (amount == null || isNaN(Number(amount)) || !category) {
 			return res.status(400).json({ error: 'Invalid amount or category' });
 		}
@@ -35,13 +35,17 @@ async function createExpense(req, res) {
 			location: location || undefined,
 			locationName: locationName || undefined,
 			note: note || undefined,
+			receiptImage: receiptImage || undefined,
 		});
 		
 		console.log('Created expense:', {
 			id: expense._id,
 			category: expense.category,
 			amount: expense.amount,
-			date: expense.date.toISOString()
+			date: expense.date.toISOString(),
+			hasLocation: !!expense.location,
+			location: expense.location,
+			locationName: expense.locationName
 		});
 		// 簡易預算檢查（當月）
 		let alert = null;
@@ -70,6 +74,38 @@ async function createExpense(req, res) {
 			}
 		}
 		return res.status(201).json({ expense, alert });
+	} catch (err) {
+		return res.status(500).json({ error: 'Server error' });
+	}
+}
+
+async function updateExpense(req, res) {
+	try {
+		const id = req.params.id;
+		const { amount, category, date, location, locationName, note, receiptImage } = req.body;
+		
+		if (amount != null && (isNaN(Number(amount)) || Number(amount) < 0)) {
+			return res.status(400).json({ error: 'Invalid amount' });
+		}
+		
+		const updateData = {};
+		if (amount != null) updateData.amount = Number(amount);
+		if (category) updateData.category = category;
+		if (date) updateData.date = new Date(date);
+		if (location !== undefined) updateData.location = location || undefined;
+		if (locationName !== undefined) updateData.locationName = locationName || undefined;
+		if (note !== undefined) updateData.note = note || undefined;
+		if (receiptImage !== undefined) updateData.receiptImage = receiptImage || undefined;
+		
+		const expense = await Expense.findOneAndUpdate(
+			{ _id: id, userId: req.userId },
+			{ $set: updateData },
+			{ new: true }
+		);
+		
+		if (!expense) return res.status(404).json({ error: 'Not found' });
+		
+		return res.json({ expense });
 	} catch (err) {
 		return res.status(500).json({ error: 'Server error' });
 	}
@@ -141,6 +177,6 @@ async function convertAllExpenses(req, res) {
 	}
 }
 
-module.exports = { listExpenses, createExpense, deleteExpense, convertAllExpenses };
+module.exports = { listExpenses, createExpense, updateExpense, deleteExpense, convertAllExpenses };
 
 
