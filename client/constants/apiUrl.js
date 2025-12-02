@@ -1,22 +1,22 @@
 import { Platform } from 'react-native';
 
-// 自動檢測平台並設置默認 API URL
+// Auto-detect platform and set default API URL
 function getDefaultApiUrl() {
-	// 如果明確設置了環境變量，優先使用
+	// If environment variable is explicitly set, use it first
 	if (process.env.EXPO_PUBLIC_API_URL) {
 		return process.env.EXPO_PUBLIC_API_URL;
 	}
 
-	// 根據平台設置默認值
+	// Set default value based on platform
 	if (Platform.OS === 'android') {
-		// Android 模擬器使用 10.0.2.2 訪問主機 localhost
-		// 真機需要設置環境變量使用電腦 IP
+		// Android emulator uses 10.0.2.2 to access host localhost
+		// Real device needs to set environment variable to use computer IP
 		return 'http://10.0.2.2:3000/api';
 	} else if (Platform.OS === 'ios') {
-		// iOS 模擬器可以使用 localhost
+		// iOS simulator can use localhost
 		return 'http://localhost:3000/api';
 	} else {
-		// Web 或其他平台
+		// Web or other platforms
 		return 'http://localhost:3000/api';
 	}
 }

@@ -17,13 +17,30 @@ api.interceptors.request.use(async (config) => {
 	return config;
 });
 
-// Mock 模式：EXPO_PUBLIC_API_URL=mock 時啟用（僅供 UI 預覽）
+// Response interceptor to handle 401 errors
+api.interceptors.response.use(
+	(response) => response,
+	async (error) => {
+		if (error.response?.status === 401) {
+			// Clear token on 401 (unauthorized)
+			try {
+				await AsyncStorage.removeItem('authToken');
+				console.log('Token cleared due to 401 error');
+			} catch (e) {
+				console.error('Error clearing token:', e);
+			}
+		}
+		return Promise.reject(error);
+	}
+);
+
+// Mock mode: enabled when EXPO_PUBLIC_API_URL=mock (for UI preview only)
 if (API_BASE_URL === 'mock') {
-	// 簡單的記憶體假資料
+	// Simple in-memory fake data
 	let mockToken = 'mock-token';
 	let mockUser = { id: 'u1', email: 'demo@example.com' };
-	// Mock 數據存儲在模塊級變量中，但每次獲取時都從空數組開始
-	// 這樣可以確保刪除後不會重新出現
+	// Mock data stored in module-level variables, but starts from empty array on each fetch
+	// This ensures deleted items won't reappear
 	let mockExpenses = [];
 	let mockBudgets = [
 		{ _id: 'b1', userId: 'u1', category: 'ALL', limit: 2000, period: 'monthly' },
@@ -32,7 +49,7 @@ if (API_BASE_URL === 'mock') {
 	];
 
 	api.interceptors.request.use(async (config) => {
-		// 改寫 adapter，攔截所有請求回傳假資料
+		// Override adapter to intercept all requests and return fake data
 		config.adapter = async () => {
 			const url = config.url || '';
 			const method = (config.method || 'get').toLowerCase();
@@ -50,8 +67,8 @@ if (API_BASE_URL === 'mock') {
 
 			// Auth
 			if (url.startsWith('/auth/login') && method === 'post') {
-				// 注意：不要在 mock API 中設置 token，讓 LoginScreen 的 saveToken 來處理
-				// 這樣可以確保邏輯一致
+				// Note: Don't set token in mock API, let LoginScreen's saveToken handle it
+				// This ensures logic consistency
 				return res({ token: mockToken, user: mockUser });
 			}
 			if (url.startsWith('/auth/register') && method === 'post') {
@@ -68,7 +85,7 @@ if (API_BASE_URL === 'mock') {
 
 			// Expenses
 			if (url === '/expenses' && method === 'get') {
-				// 返回當前 mockExpenses 的副本（已刪除的不會重新出現）
+				// Return copy of current mockExpenses (deleted items won't reappear)
 				return res({ expenses: [...mockExpenses].reverse() });
 			}
 			if (url === '/expenses' && method === 'post') {
@@ -85,7 +102,7 @@ if (API_BASE_URL === 'mock') {
 					receiptImage: body.receiptImage,
 				};
 				mockExpenses.push(newItem);
-				// 簡易預算告警
+				// Simple budget alert
 				const totals = mockExpenses.reduce((a, e) => {
 					a[e.category] = (a[e.category] || 0) + Number(e.amount);
 					return a;

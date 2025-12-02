@@ -14,7 +14,7 @@ export async function authenticateWithBiometrics(promptMessage = 'Use biometric 
 	try {
 		console.log('Starting biometric authentication with message:', promptMessage);
 		
-		// 步驟 1: 檢查硬件支持
+		// Step 1: Check hardware support
 		const hasHardware = await LocalAuthentication.hasHardwareAsync();
 		console.log('Hardware check:', hasHardware);
 		
@@ -23,7 +23,7 @@ export async function authenticateWithBiometrics(promptMessage = 'Use biometric 
 			return false;
 		}
 		
-		// 步驟 2: 檢查是否已設置
+		// Step 2: Check if enrolled
 		const isEnrolled = await LocalAuthentication.isEnrolledAsync();
 		console.log('Enrollment check:', isEnrolled);
 		
@@ -32,14 +32,14 @@ export async function authenticateWithBiometrics(promptMessage = 'Use biometric 
 			return false;
 		}
 		
-		// 步驟 3: 執行認證
+		// Step 3: Execute authentication
 		console.log('Initiating biometric authentication...');
 		const result = await LocalAuthentication.authenticateAsync({
 			promptMessage,
 			cancelLabel: 'Cancel',
-			// 禁用設備回退，強制使用 Face ID/Touch ID
+			// Disable device fallback, force Face ID/Touch ID
 			disableDeviceFallback: true,
-			// iOS 特定選項
+			// iOS specific option
 			fallbackLabel: 'Use Password',
 		});
 		
@@ -50,7 +50,7 @@ export async function authenticateWithBiometrics(promptMessage = 'Use biometric 
 			cancelled: result.cancelled
 		});
 		
-		// 處理結果
+		// Handle result
 		if (result.cancelled) {
 			console.log('User cancelled biometric authentication');
 			return false;
@@ -58,7 +58,7 @@ export async function authenticateWithBiometrics(promptMessage = 'Use biometric 
 		
 		if (result.error) {
 			console.error('Biometric authentication error:', result.error);
-			// 如果是配置錯誤，拋出錯誤讓調用者處理
+			// If configuration error, throw error for caller to handle
 			if (result.error === 'missing_usage_description') {
 				throw new Error('Face ID configuration missing. Please use development build or configure NSFaceIDUsageDescription.');
 			}
@@ -72,11 +72,11 @@ export async function authenticateWithBiometrics(promptMessage = 'Use biometric 
 		return result.success === true;
 	} catch (error) {
 		console.error('Biometric authentication exception:', error);
-		// 重新拋出配置錯誤，讓調用者可以顯示適當的提示
+		// Re-throw configuration error so caller can show appropriate prompt
 		if (error.message?.includes('missing_usage_description') || error.message?.includes('NSFaceIDUsageDescription')) {
 			throw error;
 		}
-		// 其他錯誤返回 false
+		// Other errors return false
 		return false;
 	}
 }

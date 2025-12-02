@@ -22,7 +22,7 @@ import NavBar from './components/NavBar';
 
 const Stack = createNativeStackNavigator();
 
-// 包裝組件，添加導航欄
+// Wrapper component to add navigation bar
 function createScreenWithNavBar(Component) {
 	return function WrappedScreen(props) {
 		return (

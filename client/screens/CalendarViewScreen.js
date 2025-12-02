@@ -38,14 +38,14 @@ export default function CalendarViewScreen({ navigation }) {
 			setExpenses(items);
 			setBudgets(budgetList);
 			
-			// 按日期聚合支出
+			// Aggregate expenses by date
 			const totals = new Map();
 			const categoryTotals = new Map(); // Map<dateKey, Map<category, amount>>
 			
 			items.forEach(expense => {
-				// 處理日期：確保使用本地時區的日期部分
+				// Process date: ensure using local timezone date part
 				const date = new Date(expense.date);
-				// 使用本地時區的年月日，避免時區轉換問題
+				// Use local timezone year/month/day to avoid timezone conversion issues
 				const year = date.getFullYear();
 				const month = date.getMonth() + 1;
 				const day = date.getDate();
@@ -54,7 +54,7 @@ export default function CalendarViewScreen({ navigation }) {
 				const currentTotal = totals.get(dateKey) || 0;
 				totals.set(dateKey, currentTotal + Number(expense.amount || 0));
 				
-				// 按類別聚合
+				// Aggregate by category
 				const category = expense.category || 'Other';
 				if (!categoryTotals.has(dateKey)) {
 					categoryTotals.set(dateKey, new Map());

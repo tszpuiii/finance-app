@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Alert, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { api } from '../utils/api';
-import { saveToken, getToken } from '../utils/auth';
 import { authenticateWithBiometrics, getBiometricEnabled, isBiometricAvailable, setBiometricEnabled, getBiometricType } from '../utils/biometric';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../contexts/ThemeContext';
 
 export default function LoginScreen({ navigation }) {
-	const { theme, isDarkMode } = useTheme();
+	const { theme } = useTheme();
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
 	const [loading, setLoading] = useState(false);
@@ -26,7 +25,7 @@ export default function LoginScreen({ navigation }) {
 			console.log('=== LOGIN PROCESS STARTED ===');
 			console.log('Email:', email);
 			
-			// 調用 API
+			// Call API
 			const { data } = await api.post('/auth/login', { email, password });
 			
 			if (!data || !data.token) {
@@ -38,16 +37,16 @@ export default function LoginScreen({ navigation }) {
 			
 			console.log('Token received, length:', data.token.length);
 			
-			// 保存 token - 使用多種方法確保成功
+			// Save token - use multiple methods to ensure success
 			try {
 				await AsyncStorage.setItem('authToken', data.token);
-				// 等待寫入完成
+				// Wait for write to complete
 				await new Promise(resolve => setTimeout(resolve, 100));
 				
-				// 驗證保存
+				// Verify save
 				const saved = await AsyncStorage.getItem('authToken');
 				if (saved !== data.token) {
-					// 重試保存
+					// Retry save
 					console.log('Token verification failed, retrying...');
 					await AsyncStorage.setItem('authToken', data.token);
 					await new Promise(resolve => setTimeout(resolve, 100));
@@ -64,7 +63,7 @@ export default function LoginScreen({ navigation }) {
 				return;
 			}
 			
-			// 檢查並啟用 Face ID（如果可用）
+			// Check and enable Face ID (if available)
 			let biometricEnabled = false;
 			try {
 				const available = await isBiometricAvailable();
@@ -78,10 +77,10 @@ export default function LoginScreen({ navigation }) {
 				}
 			} catch (biometricError) {
 				console.error('Biometric setup error:', biometricError);
-				// 不阻止登入，只是記錄錯誤
+				// Don't block login, just log error
 			}
 			
-			// 最終狀態驗證
+			// Final state verification
 			const finalToken = await AsyncStorage.getItem('authToken');
 			const finalBiometricEnabled = await getBiometricEnabled();
 			
@@ -91,7 +90,7 @@ export default function LoginScreen({ navigation }) {
 				biometricType: biometricEnabled ? await getBiometricType() : 'N/A'
 			});
 			
-			// 確保 token 存在
+			// Ensure token exists
 			if (!finalToken) {
 				console.error('CRITICAL: Token missing after all attempts');
 				Alert.alert('Error', 'Failed to save login token. Please try again.');
@@ -99,11 +98,22 @@ export default function LoginScreen({ navigation }) {
 				return;
 			}
 			
-			// 登入成功，導航到 Dashboard
+			// Login successful, navigate to Dashboard
 			navigation.replace('Dashboard');
 		} catch (err) {
 			console.error('Login error:', err);
-			const errorMessage = err.response?.data?.error || err.message || 'Please check your email or password';
+			let errorMessage = 'Please check your email or password';
+			
+			if (err.response?.status === 401) {
+				errorMessage = 'Invalid email or password. Please try again.';
+			} else if (err.response?.data?.error) {
+				errorMessage = err.response.data.error;
+			} else if (err.message) {
+				errorMessage = err.message;
+			} else if (err.code === 'ECONNREFUSED' || err.message?.includes('Network Error')) {
+				errorMessage = 'Unable to connect to server. Please check if the backend server is running.';
+			}
+			
 			Alert.alert('Login Failed', errorMessage);
 		} finally {
 			setLoading(false);
@@ -117,19 +127,19 @@ export default function LoginScreen({ navigation }) {
 			try {
 				setCheckingBiometric(true);
 				
-				// 檢查設備是否支持生物辨識
+				// Check if device supports biometric authentication
 				const available = await isBiometricAvailable();
 				if (!isMounted) return;
 				
-				// 檢查是否已啟用
+				// Check if enabled
 				const enabled = await getBiometricEnabled();
 				if (!isMounted) return;
 				
-				// 檢查是否有 token
+				// Check if token exists
 				const token = await AsyncStorage.getItem('authToken');
 				if (!isMounted) return;
 				
-				// 獲取生物辨識類型
+				// Get biometric type
 				const type = await getBiometricType();
 				if (!isMounted) return;
 				
@@ -143,8 +153,8 @@ export default function LoginScreen({ navigation }) {
 				
 				setBiometricType(type);
 				
-				// 如果設備支持生物辨識，就顯示按鈕
-				// 即使還沒登入過，也顯示按鈕（點擊時會提示需要先登入）
+				// If device supports biometric authentication, show button
+				// Show button even if not logged in yet (will prompt to login first when clicked)
 				if (available) {
 					setBiometricReady(true);
 					console.log(`${type} is available, button will be shown`);
@@ -181,12 +191,12 @@ export default function LoginScreen({ navigation }) {
 		try {
 			console.log('=== BIOMETRIC LOGIN INITIATED ===');
 			
-			// 步驟 1: 檢查 token
+			// Step 1: Check token
 			let token = await AsyncStorage.getItem('authToken');
 			console.log('Step 1 - Token check:', token ? `EXISTS (${token.length} chars)` : 'MISSING');
 			
 			if (!token) {
-				// 重試一次
+				// Retry once
 				await new Promise(resolve => setTimeout(resolve, 100));
 				token = await AsyncStorage.getItem('authToken');
 				console.log('Step 1 - Token retry:', token ? `EXISTS (${token.length} chars)` : 'MISSING');
@@ -201,7 +211,7 @@ export default function LoginScreen({ navigation }) {
 				return;
 			}
 			
-			// 步驟 2: 檢查設備支持
+			// Step 2: Check device support
 			const available = await isBiometricAvailable();
 			console.log('Step 2 - Biometric available:', available);
 			
@@ -214,7 +224,7 @@ export default function LoginScreen({ navigation }) {
 				return;
 			}
 			
-			// 步驟 3: 確保啟用
+			// Step 3: Ensure enabled
 			let enabled = await getBiometricEnabled();
 			console.log('Step 3 - Biometric enabled:', enabled);
 			
@@ -225,11 +235,11 @@ export default function LoginScreen({ navigation }) {
 				console.log('Step 3 - After enable:', enabled);
 			}
 			
-			// 步驟 4: 獲取類型
+			// Step 4: Get type
 			const type = biometricType || await getBiometricType();
 			console.log('Step 4 - Biometric type:', type);
 			
-			// 步驟 5: 執行認證
+			// Step 5: Execute authentication
 			console.log('Step 5 - Starting biometric authentication...');
 			console.log('Biometric animation should appear now...');
 			
@@ -237,7 +247,7 @@ export default function LoginScreen({ navigation }) {
 			console.log('Step 5 - Authentication result:', ok);
 			
 			if (ok) {
-				// 步驟 6: 驗證 token 並導航
+				// Step 6: Verify token and navigate
 				const finalToken = await AsyncStorage.getItem('authToken');
 				console.log('Step 6 - Final token check:', finalToken ? 'OK' : 'MISSING');
 				
@@ -249,13 +259,13 @@ export default function LoginScreen({ navigation }) {
 					Alert.alert('Error', 'Authentication token is missing. Please login with email and password.');
 				}
 			} else {
-				// 認證失敗或被取消，靜默處理
+				// Authentication failed or cancelled, handle silently
 				console.log('Biometric authentication was cancelled or failed');
-				// 不顯示錯誤，讓用戶可以繼續使用 email/password 登入
+				// Don't show error, allow user to continue with email/password login
 			}
 		} catch (error) {
 			console.error('Biometric authentication error:', error);
-			// 根據錯誤類型顯示不同的提示
+			// Show different prompts based on error type
 			if (error.message?.includes('missing_usage_description')) {
 				Alert.alert(
 					'Configuration Required',
@@ -383,17 +393,6 @@ const styles = StyleSheet.create({
 	checkingText: {
 		marginLeft: 8,
 		fontSize: 14,
-	},
-	infoContainer: {
-		alignItems: 'center',
-		marginBottom: 20,
-		padding: 12,
-		borderRadius: 8,
-		backgroundColor: 'rgba(0,0,0,0.05)',
-	},
-	infoText: {
-		fontSize: 14,
-		textAlign: 'center',
 	},
 	biometricButton: {
 		flexDirection: 'row',

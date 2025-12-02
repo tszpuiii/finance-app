@@ -47,7 +47,7 @@ async function createExpense(req, res) {
 			location: expense.location,
 			locationName: expense.locationName
 		});
-		// 簡易預算檢查（當月）
+		// Simple budget check (current month)
 		let alert = null;
 		const now = new Date();
 		const start = new Date(now.getFullYear(), now.getMonth(), 1);

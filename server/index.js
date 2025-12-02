@@ -8,9 +8,9 @@ dotenv.config();
 
 const app = express();
 
-// 必須在 cors 之前設置 body parser，以確保正確處理大請求
-// 增加 JSON 請求體大小限制以支持大圖片（50MB）
-// 使用 body-parser 以確保兼容性
+// Must set body parser before cors to ensure proper handling of large requests
+// Increase JSON request body size limit to support large images (50MB)
+// Use body-parser to ensure compatibility
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '50mb', parameterLimit: 50000 }));
 
@@ -32,10 +32,10 @@ if (mongoUri && mongoUri.trim().length > 0) {
 		.catch((err) => {
 			console.error('✗ MongoDB connection error:', err.message);
 			console.error('  Please check your MONGODB_URI in .env file');
-			// 不阻止服務器啟動，但會在 API 調用時返回 503
+			// Don't block server startup, but will return 503 on API calls
 		});
 
-	// 監聽連接事件
+	// Listen to connection events
 	mongoose.connection.on('error', (err) => {
 		console.error('MongoDB connection error:', err);
 	});

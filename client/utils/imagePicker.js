@@ -34,14 +34,14 @@ export async function pickImageFromCamera() {
 			mediaTypes: ImagePicker.MediaTypeOptions.Images,
 			allowsEditing: true,
 			aspect: [4, 3],
-			quality: 0.4, // 進一步降低質量以減少文件大小（0.4 = 40%）
+			quality: 0.4, // Further reduce quality to reduce file size (0.4 = 40%)
 			base64: true,
 			allowsMultipleSelection: false,
 		});
 
 		if (!result.canceled && result.assets && result.assets.length > 0) {
 			const asset = result.assets[0];
-			// 檢查 base64 大小
+			// Check base64 size
 			if (asset.base64) {
 				const sizeInMB = asset.base64.length / (1024 * 1024);
 				console.log('Image base64 size:', sizeInMB.toFixed(2), 'MB');
@@ -73,14 +73,14 @@ export async function pickImageFromLibrary() {
 			mediaTypes: ImagePicker.MediaTypeOptions.Images,
 			allowsEditing: true,
 			aspect: [4, 3],
-			quality: 0.4, // 進一步降低質量以減少文件大小（0.4 = 40%）
+			quality: 0.4, // Further reduce quality to reduce file size (0.4 = 40%)
 			base64: true,
 			allowsMultipleSelection: false,
 		});
 
 		if (!result.canceled && result.assets && result.assets.length > 0) {
 			const asset = result.assets[0];
-			// 檢查 base64 大小
+			// Check base64 size
 			if (asset.base64) {
 				const sizeInMB = asset.base64.length / (1024 * 1024);
 				console.log('Image base64 size:', sizeInMB.toFixed(2), 'MB');

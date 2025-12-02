@@ -1,179 +1,195 @@
 # Personal Finance Manager (COMP4342)
 
-一個可在 Android/iOS 執行的個人財務管理 App，含雲端後端、預算與預測、GPS 與生理辨識、離線同步與本地通知。此倉庫符合 COMP4342 Mobile Computing 的演示需求：可在真機/模擬器運行，並有雲端 API（Node/Express + MongoDB）。
+A cross-platform personal finance management mobile application for Android/iOS with cloud backend, budget tracking, GPS location, biometric authentication, offline sync, and local notifications. This repository fulfills the COMP4342 Mobile Computing course requirements: runs on real devices/emulators with cloud API (Node/Express + MongoDB).
 
-## 功能
-- 登入/註冊（JWT），首次成功登入後支援生理辨識快速登入（Expo Local Authentication）
-- 支出：新增（含 GPS 反查與類別推測）、刪除、搜尋
-- 儀表板：分類圓餅圖、近期清單、下拉刷新
-- 預算：設定 ALL/飲食/交通 月預算，顯示當月狀態與比例；新增支出時達 80%/100% 觸發本地通知
-- 洞察：日趨勢線與當月預測（平均速度推估）
-- 離線佇列：斷網時新增支出會排隊，回到儀表板自動同步
-- UI 模擬模式：無需後端與模擬器，直接用 Web 預覽
+## Features
 
-## 技術堆疊
-- 前端：Expo React Native（Navigation、expo-local-authentication、expo-location、victory-native、expo-notifications）
-- 後端：Node.js + Express + Mongoose（MongoDB 本地/Atlas）、JWT、CORS
+- **Authentication**: Login/Register with JWT. Biometric authentication (Face ID/Touch ID/Fingerprint) enabled after first successful login
+- **Expense Management**: Add expenses with GPS location reverse geocoding and category inference, delete, edit, search, and view details
+- **Dashboard**: Category pie chart, recent expense list, pull-to-refresh, total budget overview
+- **Budget Management**: Set monthly budgets for ALL/categories (Food, Transport, etc.), view current month status with progress bars
+- **Insights**: Daily expense trends, category statistics, total spent vs budget with visualizations
+- **Calendar View**: Monthly calendar with daily spending intensity color-coding
+- **Offline Support**: Queue expenses when offline, auto-sync when back online
+- **Settings**: Language selection (English/Traditional Chinese/Simplified Chinese), dark/light mode toggle, account info, logout
+- **Receipt Photos**: Optional receipt photo capture for expense records
+- **Mock Mode**: UI preview without backend or emulator using web browser
 
-## 專案結構
+## Tech Stack
+
+- **Frontend**: Expo React Native (Navigation, expo-local-authentication, expo-location, victory-native, expo-notifications, expo-image-picker)
+- **Backend**: Node.js + Express + Mongoose (MongoDB local/Atlas), JWT, CORS, body-parser
+- **State Management**: React Context (Theme, Language)
+- **Charts**: Victory Native (VictoryChart, VictoryLine, VictoryBar, VictoryPie)
+
+## Project Structure
+
 ```
 finance-app/
 ├─ client/              # Expo React Native app
+│  ├─ screens/          # Screen components
+│  ├─ components/       # Reusable components
+│  ├─ contexts/         # React Context providers
+│  ├─ services/         # API service functions
+│  └─ utils/            # Utility functions
 └─ server/              # Node/Express API
+   ├─ controllers/      # Request handlers
+   ├─ models/           # Mongoose schemas
+   └─ routes/           # API routes
 ```
 
-## 環境設置
+## Prerequisites
 
-### 1. 安裝必要軟件
+### Required Software
 
 #### MongoDB Desktop
-1. 下載 MongoDB Desktop（MongoDB Compass）：
-   - 訪問：https://www.mongodb.com/try/download/compass
-   - 下載並安裝適合您系統的版本（Windows/Mac/Linux）
-2. 安裝完成後，啟動 MongoDB Desktop
-3. 確保 MongoDB 服務正在運行（默認端口：27017）
+1. Download MongoDB Desktop (MongoDB Compass):
+   - Visit: https://www.mongodb.com/try/download/compass
+   - Download and install for your system (Windows/Mac/Linux)
+2. After installation, launch MongoDB Desktop
+3. Ensure MongoDB service is running (default port: 27017)
 
 #### Android Studio
-1. 下載 Android Studio：
-   - 訪問：https://developer.android.com/studio
-   - 下載並安裝 Android Studio
-2. 安裝 Android SDK：
-   - 打開 Android Studio
-   - 進入 Settings/Preferences → Appearance & Behavior → System Settings → Android SDK
-   - 確保已安裝 Android SDK Platform 和 Android SDK Build-Tools
-3. 創建 Android 虛擬設備（AVD）：
-   - 打開 Android Studio
-   - 點擊 Tools → Device Manager
-   - 點擊 "Create Device"
-   - 選擇設備型號（推薦：Pixel 5 或 Pixel 6）
-   - 選擇系統映像（推薦：API 33 或更高版本）
-   - 完成創建並啟動模擬器
+1. Download Android Studio:
+   - Visit: https://developer.android.com/studio
+   - Download and install Android Studio
+2. Install Android SDK:
+   - Open Android Studio
+   - Go to Settings/Preferences → Appearance & Behavior → System Settings → Android SDK
+   - Ensure Android SDK Platform and Android SDK Build-Tools are installed
+3. Create Android Virtual Device (AVD):
+   - Open Android Studio
+   - Click Tools → Device Manager
+   - Click "Create Device"
+   - Select device model (recommended: Pixel 5 or Pixel 6)
+   - Select system image (recommended: API 33 or higher)
+   - Complete setup and launch emulator
 
 #### Node.js
-1. 下載 Node.js（版本 18 或更高）：
-   - 訪問：https://nodejs.org/
-   - 下載並安裝 LTS 版本
+1. Download Node.js (version 18 or higher):
+   - Visit: https://nodejs.org/
+   - Download and install LTS version
 
-#### Expo Go（真機測試）
-1. 在手機上安裝 Expo Go：
-   - iOS：從 App Store 下載 "Expo Go"
-   - Android：從 Google Play 下載 "Expo Go"
+#### Expo Go (for real device testing)
+1. Install Expo Go on your phone:
+   - iOS: Download "Expo Go" from App Store
+   - Android: Download "Expo Go" from Google Play
 
-### 2. 獲取本地 IP 地址（真機測試需要）
+### Get Local IP Address (for real device testing)
 
 #### Windows
 ```powershell
 Get-NetIPAddress -AddressFamily IPv4 | Where-Object {$_.InterfaceAlias -notlike "*Loopback*"} | Select-Object IPAddress, InterfaceAlias
 ```
-找到您的 Wi-Fi 或以太網適配器的 IP 地址（例如：192.168.1.10）
+Find your Wi-Fi or Ethernet adapter IP address (e.g., 192.168.1.10)
 
 #### Mac/Linux
 ```bash
 ifconfig | grep "inet " | grep -v 127.0.0.1
 ```
-或
+or
 ```bash
 ip addr show | grep "inet " | grep -v 127.0.0.1
 ```
 
-## 快速開始
+## Quick Start
 
-### 步驟 1: 克隆倉庫
+### Step 1: Clone Repository
 ```bash
 git clone <repository-url>
 cd finance-app
 ```
 
-### 步驟 2: 設置後端服務器
+### Step 2: Setup Backend Server
 
 ```powershell
 cd server
 npm install
 ```
 
-創建 `.env` 文件（如果不存在）：
+Create `.env` file (if it doesn't exist):
 ```powershell
 Copy-Item env.example .env
 ```
 
-`.env` 文件已自動配置為：
+The `.env` file is automatically configured with:
 ```
 PORT=3000
 MONGODB_URI=mongodb://localhost:27017/finance-app
-JWT_SECRET=自動生成的隨機字串
+JWT_SECRET=<auto-generated random string>
 ```
 
-**使用 MongoDB Atlas（雲端）**：編輯 `server/.env`，將 `MONGODB_URI` 改為你的 Atlas 連線字串。
+**Using MongoDB Atlas (Cloud)**: Edit `server/.env` and change `MONGODB_URI` to your Atlas connection string.
 
-### 步驟 3: 設置前端
+### Step 3: Setup Frontend
 
 ```powershell
 cd client
 npm install
 ```
 
-### 步驟 4: 啟動應用
+### Step 4: Start Application
 
-#### 選項 A: Android 模擬器（推薦）
+#### Option A: Android Emulator (Recommended)
 
-**終端 1 - 啟動後端服務器：**
+**Terminal 1 - Start Backend Server:**
 ```powershell
 cd server
 npm start
 ```
-應該看到：
+You should see:
 ```
 Server running on port 3000
 ✓ Connected to MongoDB
 ```
 
-**終端 2 - 啟動前端開發服務器：**
+**Terminal 2 - Start Frontend Dev Server:**
 ```powershell
 cd client
 $env:EXPO_PUBLIC_API_URL="http://10.0.2.2:3000/api"
 npm start
 ```
 
-**在 Expo 開發服務器終端：**
-- 按 `a` 鍵 - 在 Android 模擬器中打開應用
-- 按 `r` 鍵 - 重新加載應用
-- 按 `m` 鍵 - 切換菜單
+**In Expo Dev Server Terminal:**
+- Press `a` - Open app in Android emulator
+- Press `r` - Reload app
+- Press `m` - Toggle menu
 
-**注意**：`10.0.2.2` 是 Android 模擬器訪問主機 localhost 的特殊地址。
+**Note**: `10.0.2.2` is the special address for Android emulator to access host localhost.
 
-#### 選項 B: 真機（iPhone/Android）
+#### Option B: Real Device (iPhone/Android)
 
-**步驟 1: 獲取本地 IP 地址**
+**Step 1: Get Local IP Address**
 - Windows: `Get-NetIPAddress -AddressFamily IPv4 | Where-Object {$_.InterfaceAlias -notlike "*Loopback*"}`
 - Mac/Linux: `ifconfig | grep "inet " | grep -v 127.0.0.1`
 
-**步驟 2: 啟動後端服務器（終端 1）**
+**Step 2: Start Backend Server (Terminal 1)**
 ```powershell
 cd server
 npm start
 ```
 
-**步驟 3: 啟動前端開發服務器（終端 2）**
+**Step 3: Start Frontend Dev Server (Terminal 2)**
 ```powershell
 cd client
 $env:EXPO_PUBLIC_API_URL="http://YOUR_IP:3000/api"
 npm start
 ```
-將 `YOUR_IP` 替換為步驟 1 中獲取的 IP 地址（例如：`192.168.1.10`）
+Replace `YOUR_IP` with the IP address from Step 1 (e.g., `192.168.1.10`)
 
-**步驟 4: 在手機上連接**
-- 確保手機和電腦連接到同一個 Wi-Fi 網絡
-- 打開 Expo Go 應用
-- 掃描終端中顯示的 QR 碼
-- 或者使用相機應用掃描 QR 碼，然後點擊通知打開 Expo Go
+**Step 4: Connect on Phone**
+- Ensure phone and computer are on the same Wi-Fi network
+- Open Expo Go app
+- Scan the QR code shown in terminal
+- Or use camera app to scan QR code, then tap notification to open Expo Go
 
-**如果無法連接，可以使用 tunnel 模式：**
+**If connection fails, use tunnel mode:**
 ```powershell
 npx expo start --tunnel
 ```
-（較慢但可以在不同網絡下使用）
+(Slower but works across different networks)
 
-#### 選項 C: Web 模式（僅 UI 預覽）
+#### Option C: Web Mode (UI Preview Only)
 
 ```powershell
 cd client
@@ -181,15 +197,15 @@ $env:EXPO_PUBLIC_API_URL="mock"
 npm run web
 ```
 
-Mock 模式會在前端攔截 API 並回傳假資料，方便快速驗收 UI 與流程。
+Mock mode intercepts API calls and returns fake data, useful for quick UI and flow validation.
 
-## 檢查服務狀態
+## Service Status Check
 
-### 檢查後端服務器
-在瀏覽器打開：`http://localhost:3000/health`
-應該看到：`{"status":"ok"}`
+### Check Backend Server
+Open in browser: `http://localhost:3000/health`
+Should see: `{"status":"ok"}`
 
-### 檢查 MongoDB
+### Check MongoDB
 ```powershell
 # Windows PowerShell
 Test-NetConnection -ComputerName localhost -Port 27017
@@ -198,41 +214,144 @@ Test-NetConnection -ComputerName localhost -Port 27017
 nc -zv localhost 27017
 ```
 
-## 常用腳本
-- Server：`npm run dev`（nodemon 啟動）
-- Client：`npm run start`、`npm run android`、`npm run web`
+## User Manual
 
-## 常見問題
+### Getting Started
 
-### 端口被佔用
-如果端口 3000 或 8081 被佔用，可以：
-- 停止佔用端口的進程
-- 或修改 `server/.env` 中的 `PORT` 設置
+1. **Register/Login**
+   - Tap "No account? Register" to create a new account
+   - Enter email and password
+   - After first successful login, biometric authentication (Face ID/Touch ID) will be automatically enabled if available
+   - On subsequent logins, you can use biometric authentication or email/password
 
-### 應用一直加載
-1. 檢查後端服務器是否運行
-2. 檢查 API URL 是否正確設置
-3. 清除緩存：`npx expo start --clear`
+2. **Dashboard (Home)**
+   - View total spent and monthly spending summary
+   - See total budget overview with progress bar
+   - Quick actions: Add Expense, Currency Settings, Budget Settings
+   - View expense by category pie chart
+   - Scroll to see recent expenses list
+   - Pull down to refresh and sync offline expenses
 
-### 無法連接到後端
-- **Android 模擬器**：使用 `10.0.2.2:3000`
-- **真機**：使用電腦的 IP 地址（確保在同一 Wi-Fi 網絡）
-- 確保後端服務器正在運行
-- 檢查防火牆是否阻止了端口 3000
+3. **Add Expense**
+   - Tap the "+" button in navigation bar or "Add Expense" on Dashboard
+   - Enter amount, select category, add optional note
+   - App automatically detects your location (if permission granted)
+   - Optionally take a photo of receipt
+   - Tap "Save" to record expense
+   - Expenses are queued if offline and synced when back online
 
-### 通知/定位權限
-- 到系統設定允許 App 權限
-- 在 Android 模擬器中，位置服務可能不可用（這是模擬器限制）
+4. **View Expense Details**
+   - Tap any expense in the recent list
+   - View full details: amount, category, date, location, note, receipt photo
+   - Edit or delete expense from detail screen
 
-### iPhone 動態島遮擋
-- 應用已自動處理安全區域，內容不會被動態島遮擋
+5. **Edit Expense**
+   - From expense detail screen, tap "Edit Expense"
+   - Modify amount, category, note, or receipt photo
+   - Tap "Save" to update
 
-## 參考文件
-- Expo（React Native）：https://docs.expo.dev/
-- MongoDB 本地安裝：`server/MONGODB_SETUP.md`
-- MongoDB Atlas：https://www.mongodb.com/atlas/database
-- Android Studio：https://developer.android.com/studio
+6. **Calendar View**
+   - Tap calendar icon in navigation bar
+   - View monthly calendar with color-coded spending intensity
+   - Tap any date to see daily expense list
+   - Swipe left/right to change months
+   - Colors indicate spending intensity based on your budget
+
+7. **Budget Management**
+   - Tap "Budget" from Dashboard quick actions or navigation bar
+   - Set overall monthly budget
+   - Set category-specific budgets (Food, Transport, etc.)
+   - Add custom categories
+   - Remove categories (ALL category cannot be removed)
+   - Progress bars show current spending vs budget
+   - Auto-saves 1 second after input changes
+
+8. **Insights**
+   - Tap insights icon in navigation bar
+   - View total spent vs total budget with large progress bar
+   - See average daily spending
+   - View top expense categories with percentage bars
+   - View daily expense trend chart
+   - All data is for current month
+
+9. **Settings**
+   - Tap settings icon in navigation bar
+   - **Language**: Switch between English, Traditional Chinese, Simplified Chinese (no restart required)
+   - **Dark Mode**: Toggle between light and dark theme
+   - **Account Info**: View email, user ID, member since date
+   - **Logout**: Log out and return to login screen
+
+10. **Currency Settings**
+    - Access from Dashboard quick actions
+    - Select your preferred currency
+    - Currency is displayed throughout the app
+
+### Tips
+
+- **Offline Mode**: You can add expenses when offline. They will be automatically synced when you return to Dashboard and have internet connection.
+- **Location**: Grant location permission for automatic location detection when adding expenses. Location is used for category inference.
+- **Receipt Photos**: Taking photos is optional. Photos are compressed to save storage space.
+- **Biometric Login**: After first login, Face ID/Touch ID will be available. Tap the biometric button below the login button to use it.
+- **Dark Mode**: All screens support dark mode. Toggle in Settings.
+- **Search**: On Dashboard, use the search bar to find expenses by category, note, or amount.
+
+## Common Scripts
+
+- **Server**: `npm run dev` (start with nodemon)
+- **Client**: `npm start`, `npm run android`, `npm run web`
+
+## Troubleshooting
+
+### Port Already in Use
+If port 3000 or 8081 is occupied:
+- Stop the process using the port
+- Or modify `PORT` setting in `server/.env`
+
+### App Keeps Loading
+1. Check if backend server is running
+2. Check if API URL is correctly set
+3. Clear cache: `npx expo start --clear`
+
+### Cannot Connect to Backend
+- **Android Emulator**: Use `10.0.2.2:3000`
+- **Real Device**: Use computer's IP address (ensure same Wi-Fi network)
+- Ensure backend server is running
+- Check if firewall is blocking port 3000
+
+### Notifications/Location Permissions
+- Go to system settings to allow app permissions
+- In Android emulator, location services may not be available (emulator limitation)
+
+### iPhone Dynamic Island Overlap
+- App automatically handles safe area, content won't be blocked by dynamic island
+
+### Face ID Not Working in Expo Go
+- Face ID requires development build. Expo Go doesn't support Face ID due to native module limitations.
+- The code is fully implemented and will work in development build or production build.
+- For testing, use email/password login in Expo Go.
+
+### Biometric Authentication Shows "Login Required"
+- Make sure you've logged in with email/password at least once
+- After first login, biometric authentication is automatically enabled
+- If still not working, try logging out and logging in again
+
+## API Documentation
+
+The backend provides RESTful API endpoints for:
+- Authentication: `/api/auth/register`, `/api/auth/login`, `/api/auth/me`
+- Expenses: `/api/expenses` (GET, POST), `/api/expenses/:id` (GET, PUT, DELETE)
+- Budgets: `/api/budgets` (GET, POST, PUT, DELETE), `/api/budgets/status` (GET)
+
+For detailed API documentation, see `API_DOCUMENTATION.md` (if available).
+
+## References
+
+- Expo (React Native): https://docs.expo.dev/
+- MongoDB Local Setup: `server/MONGODB_SETUP.md`
+- MongoDB Atlas: https://www.mongodb.com/atlas/database
+- Android Studio: https://developer.android.com/studio
+- Victory Native Charts: https://formidable.com/open-source/victory/docs/native/
 
 ---
 
-更完整的課程導向建置與分工指南，請見 `docs/COMP4342_Guide.md`。
+For complete course-oriented setup and development guide, see `docs/COMP4342_Guide.md` (if available).

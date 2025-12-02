@@ -11,7 +11,7 @@ export async function createExpense(payload) {
 }
 
 export async function updateExpense(id, payload) {
-	// 如果包含圖片，使用 FormData 或直接發送 base64
+	// If image is included, send base64 directly
 	const { data } = await api.put(`/expenses/${id}`, payload);
 	return data;
 }

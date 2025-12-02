@@ -10,10 +10,10 @@ export async function saveToken(token) {
 		console.log('Saving token, length:', token.length);
 		await AsyncStorage.setItem('authToken', token);
 		
-		// 等待一下確保寫入完成
+		// Wait a bit to ensure write completes
 		await new Promise(resolve => setTimeout(resolve, 50));
 		
-		// 驗證保存是否成功
+		// Verify save was successful
 		const saved = await AsyncStorage.getItem('authToken');
 		if (saved === token) {
 			console.log('Token saved and verified successfully');
@@ -33,7 +33,7 @@ export async function saveToken(token) {
 export async function getToken() {
 	try {
 		const token = await AsyncStorage.getItem('authToken');
-		// 減少日誌輸出，只在關鍵時刻輸出
+		// Reduce log output, only log at critical moments
 		// console.log('Token retrieved:', token ? `exists (length: ${token.length})` : 'missing');
 		return token;
 	} catch (error) {
@@ -46,7 +46,7 @@ export async function clearToken() {
 	try {
 		await AsyncStorage.removeItem('authToken');
 		console.log('Token cleared');
-		// 驗證清除是否成功
+		// Verify clear was successful
 		const token = await AsyncStorage.getItem('authToken');
 		if (!token) {
 			console.log('Token clear verification: OK');

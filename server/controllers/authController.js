@@ -5,7 +5,7 @@ const User = require('../models/User');
 
 async function register(req, res) {
 	try {
-		// 檢查數據庫連接
+		// Check database connection
 		if (mongoose.connection.readyState !== 1) {
 			console.error('MongoDB not connected. ReadyState:', mongoose.connection.readyState);
 			return res.status(503).json({ error: 'Database not available' });
@@ -16,13 +16,13 @@ async function register(req, res) {
 			return res.status(400).json({ error: 'Email and password required' });
 		}
 
-		// 驗證 email 格式
+		// Validate email format
 		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 		if (!emailRegex.test(email)) {
 			return res.status(400).json({ error: 'Invalid email format' });
 		}
 
-		// 驗證密碼長度
+		// Validate password length
 		if (password.length < 6) {
 			return res.status(400).json({ error: 'Password must be at least 6 characters' });
 		}

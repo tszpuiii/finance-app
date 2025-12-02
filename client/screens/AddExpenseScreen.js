@@ -76,15 +76,15 @@ export default function AddExpenseScreen({ navigation }) {
 		return '';
 	}
 
-	// 獲取位置的函數（非阻塞）
+	// Function to get location (non-blocking)
 	const getCurrentLocation = useCallback(async () => {
 			try {
-			// 檢查位置服務是否可用（可能在某些環境中不可用）
+			// Check if location services are available (may not be available in some environments)
 			let isEnabled = false;
 			try {
 				isEnabled = await Location.hasServicesEnabledAsync();
 			} catch (e) {
-				// hasServicesEnabledAsync 可能在某些環境中不可用，繼續嘗試
+				// hasServicesEnabledAsync may not be available in some environments, continue trying
 				console.log('Could not check location services status, continuing...');
 			}
 
@@ -93,7 +93,7 @@ export default function AddExpenseScreen({ navigation }) {
 				return null;
 			}
 
-			// 請求位置權限
+			// Request location permission
 				const { status } = await Location.requestForegroundPermissionsAsync();
 				if (status !== 'granted') {
 				console.log('Location permission not granted, status:', status);
@@ -288,6 +288,7 @@ export default function AddExpenseScreen({ navigation }) {
 			<TextInput
 				style={styles.input}
 				placeholder="Amount (e.g. 120)"
+				placeholderTextColor={theme.textSecondary}
 				keyboardType="numeric"
 				value={amount}
 				onChangeText={setAmount}
@@ -377,6 +378,7 @@ export default function AddExpenseScreen({ navigation }) {
 			<TextInput
 				style={[styles.input, styles.noteInput]}
 				placeholder="Note (optional)"
+				placeholderTextColor={theme.textSecondary}
 				multiline
 				numberOfLines={3}
 				value={note}
@@ -490,23 +492,23 @@ function getStyles(theme, isDarkMode) {
 	},
 	input: {
 		borderWidth: 1,
-			borderColor: theme.border,
+		borderColor: theme.border,
 		borderRadius: 8,
 		padding: 12,
 		marginBottom: 12,
-			backgroundColor: theme.card,
-			color: theme.text,
+		backgroundColor: theme.surface,
+		color: theme.text,
 	},
 	dropdown: {
 		flexDirection: 'row',
 		alignItems: 'center',
 		justifyContent: 'space-between',
 		borderWidth: 1,
-			borderColor: theme.border,
+		borderColor: theme.border,
 		borderRadius: 8,
 		padding: 12,
 		marginBottom: 12,
-			backgroundColor: theme.card,
+		backgroundColor: theme.surface,
 	},
 	dropdownText: {
 		fontSize: 16,
@@ -514,7 +516,7 @@ function getStyles(theme, isDarkMode) {
 	},
 	dropdownPlaceholder: {
 		fontSize: 16,
-			color: theme.textTertiary,
+		color: theme.textSecondary,
 	},
 	dropdownArrow: {
 		fontSize: 12,
@@ -527,7 +529,7 @@ function getStyles(theme, isDarkMode) {
 		alignItems: 'center',
 	},
 	modalContent: {
-			backgroundColor: theme.card,
+		backgroundColor: theme.surface,
 		borderRadius: 12,
 		width: '80%',
 		maxHeight: '70%',

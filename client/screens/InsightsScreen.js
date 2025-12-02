@@ -7,7 +7,7 @@ import { getBudgetStatus } from '../services/budgets';
 import { getCurrency, formatCurrencySync } from '../utils/currencySettings';
 import { useTheme } from '../contexts/ThemeContext';
 
-// 動態導入 Victory 組件
+// Dynamically import Victory components
 let VictoryChart, VictoryLine, VictoryBar, VictoryPie, VictoryTheme;
 try {
 	const victoryNative = require('victory-native');
@@ -20,7 +20,7 @@ try {
 	console.warn('Victory components not available');
 }
 
-// 顏色調色板
+// Color palette
 const COLORS = ['#007AFF', '#34C759', '#FF9500', '#FF3B30', '#AF52DE', '#FF2D55', '#5AC8FA', '#FFCC00'];
 
 export default function InsightsScreen() {
@@ -67,11 +67,11 @@ export default function InsightsScreen() {
 				return expenseDate >= monthStart && expenseDate <= monthEnd;
 			});
 
-			// 計算總支出和平均每日支出（僅當月）
+			// Calculate total spent and average daily spending (current month only)
 			const total = expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
 			setTotalSpent(total);
 			
-			// 計算平均每日支出（基於有支出的天數）
+			// Calculate average daily spending (based on days with expenses)
 			const byDay = new Map();
 			for (const e of expenses) {
 				const d = new Date(e.date);
@@ -81,12 +81,12 @@ export default function InsightsScreen() {
 			const daysWithExpenses = byDay.size || 1;
 			setAvgDaily(total / daysWithExpenses);
 
-			// 依日期聚合，做簡單趨勢線
+			// Aggregate by date for simple trend line
 			const pts = Array.from(byDay.entries()).map(([k, v]) => ({ x: new Date(k), y: v }));
 			pts.sort((a, b) => a.x - b.x);
 			setSeries(pts);
 
-			// 類別統計（僅當月）
+			// Category statistics (current month only)
 			const categoryMap = new Map();
 			for (const e of expenses) {
 				const cat = e.category || 'Uncategorized';
@@ -97,10 +97,10 @@ export default function InsightsScreen() {
 				.sort((a, b) => b.total - a.total)
 				.slice(0, 8); // Top 8 categories
 			
-			// 計算百分比：相對於總支出的百分比和相對於預算的百分比
+			// Calculate percentage: relative to total spent and relative to budget
 			const actualTotal = stats.reduce((sum, s) => sum + s.total, 0);
 			const statsWithPercent = stats.map(s => {
-				// 找到該類別的預算
+				// Find budget for this category
 				const budget = budgets.find(b => b.category === s.category && b.category !== 'ALL');
 				const budgetLimit = budget?.limit || 0;
 				const budgetRatio = budgetLimit > 0 ? s.total / budgetLimit : 0;
@@ -124,7 +124,7 @@ export default function InsightsScreen() {
 		}
 	}, []);
 
-	// 當頁面獲得焦點時自動刷新
+	// Auto refresh when page gains focus
 	useFocusEffect(
 		useCallback(() => {
 			const showLoading = isFirstLoad.current;
@@ -140,14 +140,14 @@ export default function InsightsScreen() {
 		loadData();
 	};
 
-	// 獲取進度條顏色
+	// Get progress bar color
 	function getProgressColor(ratio) {
 		if (ratio >= 1) return '#FF3B30'; // 超過預算 - 紅色
 		if (ratio >= 0.8) return '#FF9500'; // 接近預算 - 橙色
 		return '#34C759'; // 正常 - 綠色
 	}
 
-	// 獲取類別顏色
+	// Get category color
 	function getCategoryColor(index) {
 		return COLORS[index % COLORS.length];
 	}
@@ -347,7 +347,7 @@ export default function InsightsScreen() {
 
 					{/* Category List with Percentage Bars */}
 					{categoryStats.map((stat, index) => {
-						// 如果有預算，顯示相對於預算的百分比；否則顯示佔總支出的百分比
+						// If budget exists, show percentage relative to budget; otherwise show percentage of total spent
 						const hasBudget = stat.budgetLimit > 0;
 						const displayPercent = hasBudget ? stat.budgetPercent : stat.percentage;
 						const barWidth = hasBudget 

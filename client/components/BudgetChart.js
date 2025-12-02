@@ -3,7 +3,7 @@ import { getCurrency, formatCurrencySync } from '../utils/currencySettings';
 import { useState, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 
-// 動態導入 Victory 組件
+// Dynamically import Victory components
 let VictoryChart, VictoryPie;
 try {
 	const victoryNative = require('victory-native');
@@ -13,7 +13,7 @@ try {
 	console.warn('Victory components not available, using fallback UI');
 }
 
-// 顏色調色板
+// Color palette
 const COLORS = ['#007AFF', '#34C759', '#FF9500', '#FF3B30', '#AF52DE', '#FF2D55', '#5AC8FA', '#FFCC00'];
 
 export default function BudgetChart({ data }) {
@@ -39,12 +39,12 @@ export default function BudgetChart({ data }) {
 		);
 	}
 
-	// 獲取類別顏色
+	// Get category color
 	function getCategoryColor(index) {
 		return COLORS[index % COLORS.length];
 	}
 
-	// 如果 VictoryPie 和 VictoryChart 可用，顯示餅圖
+	// If VictoryPie and VictoryChart are available, show pie chart
 	if (VictoryPie && VictoryChart) {
 		return (
 			<View style={styles.chartContainer}>
@@ -81,7 +81,7 @@ export default function BudgetChart({ data }) {
 		);
 	}
 
-	// 降級方案：顯示列表
+	// Fallback: show list
 	return (
 		<View style={styles.fallbackContainer}>
 			{data.map((item, index) => (

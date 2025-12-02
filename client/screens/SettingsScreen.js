@@ -51,12 +51,12 @@ export default function SettingsScreen() {
 			console.error('Failed to load user info:', error);
 			const errorMessage = error.response?.data?.error || error.message || 'Failed to load user information';
 			setError(errorMessage);
-			// 如果 API 失敗，嘗試從 token 中獲取基本信息
+			// If API fails, try to get basic info from token
 			try {
 				const { getToken } = require('../utils/auth');
 				const token = await getToken();
 				if (token) {
-					// 設置一個基本的用戶信息對象，表示已登錄但無法獲取詳細信息
+					// Set a basic user info object indicating logged in but unable to get details
 					setUserInfo({ email: 'Unable to load', id: 'N/A' });
 				}
 			} catch (err) {
